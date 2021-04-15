@@ -1,0 +1,35 @@
+1.
+The game basically needs all upper nodes to find its target symbols in all lower nodes and find their way to eliminate them without being eliminated by their counter symbol. So by implementing a basic search algorithm, the program could find each node’s counter symbol and get to eliminate them. Therefore using breadth-first search with every node has the same weight like carpet search would do best.
+
+State: number of upper nodes, number of lower nodes.
+Initial: (n,m)  , n>0,m>0, must have solutions
+Goal: (*, 0)
+Path Cost: number of moves to eliminate lowers and number of eliminated upper nodes
+
+
+
+
+2. 
+
+In this project, we implemented Breadth-first search as our base algorithm. We choose BFS rather than DFS for the reason that we may end up with an infinite loop for searching paths. As the board is continuously linked with hex grids with limited board size, so expanding our search region from the inner circle to the outer one would be a good choice. 
+
+Our BFS algorithm takes O(n^m) space and O(n^m) time where n is the number of children(branching factor), in our case, 6 for the first node and decreasing to 3 and even to 2 children in the later stages. The m here stands for the distance between root and target which is limited to 8. Given the board size is limited so implementing breadth first search and store all nodes in memory isn’t terrible.
+The BFS algorithm is complete as it expands from the center node to cover the whole board at the final stage. So if there’s a solution, the algorithm always finds them and returns a reliable result.
+It is optimal as the searching algorithm covers the board from inner to outside layer by layer so the distance travelled by the algorithm is always the same as the actual steps taken. However, the indifferent weight between grids (always = 1) is a crucial reason that this algorithm is optimal.
+Heuristics have been used as there are six adjacent nodes for each one. By simply calculating the minimal steps taken to get to the goal using coordinate calculation. It helps the BFS algorithm to choose which adjacent node should be searched first. Therefore, this heuristic slightly increases the performance of our program.
+
+
+
+3. 
+
+The different position of nodes on the board affects the branching factor and tree depth.
+If the node and target are diagonally distributed at different corners on the board, the greatest depth will be the board's width, which is 8. The branching factor starts from 3 instead of 6 if the node was put in the middle of the board, and the space and time take 3+5+7+9+9+9+9+9 = 60 units.
+If the search starts from the node at the center and the target lies along the board edge. The space and time takes 6+12+18+24 = 60 units.
+Therefore the worst case for different starting points is the same.
+If the nodes are placed together instead of distributed, space and time cost will be reduced as the tree depth decreases.
+If the node was placed at the corner of the board, with minimal starting branching factor, the time and space cost will be reduced compared to other starting points.
+
+As the algorithm tears apart of the synchronising playing (move all nodes at the same time) to linear solving, to find the optimal solution, it has to do N! (number of upper nodes for movement) calculations to get all possible outcomes to compare with. Since the algorithm runs every move after each nodes moves, so with tree depth d (steps need to be taken), the calculation reaches (N!)^d. However, it is not necessary to find the shortest path so the worst space and time complexity will be  (N!)^d * b^d while the avg case will be N*b^d and the best case be b^d.
+
+
+
