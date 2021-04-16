@@ -164,6 +164,7 @@ def move_token(type, start, end, next_board_dict, turn):
     else:
         print("wrong move: it did not move")
     
+#function that randomly moves nodes
 def random_move(type, start, play_dict, next_board_dict, turn):
 
     next_point_list = get_six_adj_nodes(start)
