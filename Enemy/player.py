@@ -1,4 +1,5 @@
 from IG.util import *
+from IG.random_algorithms import *
 
 class Player:
     
@@ -43,12 +44,16 @@ class Player:
         Called at the beginning of each turn. Based on the current state
         of the game, select an action to play this turn.
         """
-        # put your code here
+        # Random Action defined in random_algorithms.py
+        return random_action(self)
+        
+
 
         #throw at the farest possible grid
         #action = ("THROW","s", (1,0))
         for i in self.throw_range:
             a = 1
+        
         return ("THROW","s", (i,0))
     
     def update(self, opponent_action, player_action):
@@ -60,8 +65,7 @@ class Player:
         and player_action is this instance's latest chosen action.
         """
         # do not calculate elimination now, just add symbols
-        # add each player's action to board
-        # for the reason of synchronising play
+        # add each player's action to board for the reason of synchronising play.
         # if throw, also reduce throws left by 1
         put_action_to_board(self, "opponent", opponent_action, self.play_dict)
         put_action_to_board(self, "player", player_action, self.play_dict)
@@ -71,7 +75,8 @@ class Player:
         eliminate_and_update_board(self.play_dict, self.target_dict)
         self.game_round += 1
 
-        # if not reached whole board throw, expanding the throw range
+
+        # if not reached whole board throw range, expanding the throw range
         if self.throw_row >= -4:
             self.throw_row -= 1
 
@@ -81,3 +86,6 @@ class Player:
         else:
             self.throw_range = range(self.throw_row+1,5)
             self.enemy_throw_range = range(-4,-self.throw_row)
+        print("\n\nSide:", self.side)
+        print("\nafter round, play_dict:", self.play_dict)
+        print("\n\n")

@@ -165,9 +165,9 @@ def move_token(type, start, end, next_board_dict, turn):
         print("wrong move: it did not move")
     
 #function that randomly moves nodes
-def random_move(type, start, play_dict, next_board_dict, turn):
+def random_move(symbol_type, start_loc, play_dict, next_board_dict, turn):
 
-    next_point_list = get_six_adj_nodes(start)
+    next_point_list = get_six_adj_nodes(start_loc)
     upper_token_list = [item for sublist in play_dict["upper"].values() for item in sublist]
     for point in next_point_list:
         if point in upper_token_list:
@@ -180,8 +180,8 @@ def random_move(type, start, play_dict, next_board_dict, turn):
     random.shuffle(next_point_list)
     for point in next_point_list:
         if is_point_valid(next_board_dict, point):
-            if check_counter_node(next_board_dict, type, point):
-                move_token(type, start, point, next_board_dict, turn)
+            if check_counter_node(next_board_dict, symbol_type, point):
+                move_token(symbol_type, start, point, next_board_dict, turn)
                 break
 
 def print_slide(t, r_a, q_a, r_b, q_b, **kwargs):

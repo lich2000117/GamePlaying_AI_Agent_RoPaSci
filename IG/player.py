@@ -1,4 +1,5 @@
 from IG.util import *
+from IG.random_algorithms import *
 
 class Player:
     
@@ -11,19 +12,12 @@ class Player:
         play as Upper), or the string "lower" (if the instance will play
         as Lower).
         """
-        board_dict = {}
         self.game_round = 1
         self.throws_left = 9   # reduced by 1 after each throw in util/put_action_board function
-        self.throw_row = 3 #available throw row 
+        self.enemy_throws_left = 9
+        self.side = player
         # Determine throw range according to different locations
-        if player == "lower":
-            self.throw_range = range(-4,-self.throw_row)  # available throw range
-            self.enemy_throw_range = range(self.throw_row+1,5)
-            self.side = "lower"
-        else:
-            self.throw_range = range(self.throw_row+1,5)
-            self.enemy_throw_range = range(-4,-self.throw_row)
-            self.side = "upper"
+        Init_throw_range(self)
 
         # play_dict is used to store symbols for each player
         self.play_dict = {"player":{"r":[], "p":[], "s":[]},
@@ -43,12 +37,16 @@ class Player:
         Called at the beginning of each turn. Based on the current state
         of the game, select an action to play this turn.
         """
-        # put your code here
+        # Random Action defined in random_algorithms.py
+        return random_action(self)
+        
+
 
         #throw at the farest possible grid
         #action = ("THROW","s", (1,0))
         for i in self.throw_range:
             a = 1
+        
         return ("THROW","s", (i,0))
     
     def update(self, opponent_action, player_action):
@@ -59,25 +57,23 @@ class Player:
         The parameter opponent_action is the opponent's chosen action,
         and player_action is this instance's latest chosen action.
         """
-        # do not calculate elimination now, just add symbols
-        # add each player's action to board
-        # for the reason of synchronising play
+        # do not calculate elimination now, just update symbols to play_dict
+        # add each player's action to board for the reason of synchronising play.
         # if throw, also reduce throws left by 1
-        put_action_to_board(self, "opponent", opponent_action, self.play_dict)
-        put_action_to_board(self, "player", player_action, self.play_dict)
+        
+        add_action_to_play_dict(self, "opponent", opponent_action)
+        add_action_to_play_dict(self, "player", player_action)
 
         # Calculate eliminations and update
         # after token actions, check if eliminate other tokens by following function
-        eliminate_and_update_board(self.play_dict, self.target_dict)
+        eliminate_and_update_board(self, "player", self.target_dict)
+        eliminate_and_update_board(self, "opponent", self.target_dict)
         self.game_round += 1
 
-        # if not reached whole board throw, expanding the throw range
-        if self.throw_row >= -4:
-            self.throw_row -= 1
 
-        if self.side == "lower":
-            self.throw_range = range(-4,-self.throw_row)
-            self.enemy_throw_range = range(self.throw_row+1,5)
-        else:
-            self.throw_range = range(self.throw_row+1,5)
-            self.enemy_throw_range = range(-4,-self.throw_row)
+        # if not reached whole board throw range, expanding the throw range
+        update_throw_range(self)
+        print("\nafter round, play_dict:", self.play_dict)
+        print("\n\nthrows_left", self.throws_left)
+        print("\n\nEnemy_throws_left", self.enemy_throws_left)
+        print("\n\n")
