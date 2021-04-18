@@ -14,7 +14,7 @@ class Player:
         as Lower).
         """
         #Config
-        self.REFINED_THROW = "attack"
+        self.REFINED_THROW = "defense"
         self.BFS_TUNE_MODE = True  # If using refined algorithms (get nearest nodes for BFS)
         self.BREAK_TIE = True  # check if will break the tie when reaching same game state three times
         
