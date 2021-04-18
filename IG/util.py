@@ -52,9 +52,9 @@ def get_symbol_by_location(whichplayer,play_dict,point):
     out = ""
     if point in find_player_symbols(play_dict, whichplayer, "r"):
         out += "r"
-    elif point in find_player_symbols(play_dict, whichplayer, "p"):
+    if point in find_player_symbols(play_dict, whichplayer, "p"):
         out += "p"
-    elif point in find_player_symbols(play_dict, whichplayer, "s"):
+    if point in find_player_symbols(play_dict, whichplayer, "s"):
         out += "s"
     return out
 
@@ -111,17 +111,19 @@ def eliminate_and_update_board(play_class,target_dict):
             #  get what types are at location, 
             types_at_location = set(get_symbol_by_location("player",play_class.play_dict, symbol)\
                     + get_symbol_by_location("opponent",play_class.play_dict, symbol))
-            # if three types all occurs, remove all of them at that location
+            # if three types all occurs, remove all of the symbols of all types at that location
             if (len(types_at_location) == 3):
+                print("&&&&&&&&&&&&&&&&& REMOVING ALL TYPES&&&&&&&&&&&&&&&&&&")
                 remove_all_type_symbols_at_location(play_class,"s",symbol)
                 remove_all_type_symbols_at_location(play_class,"r",symbol)
                 remove_all_type_symbols_at_location(play_class,"p",symbol)
             remove_all_type_symbols_at_location(play_class,target_symbol,symbol)
+            print("\n\n(((((((((((((((((((( types_at_location: ", types_at_location)
 
 
 
 
-#update board according to player's action
+#update play_dict according to player's action, just add symbol, not checking elimination
 def add_action_to_play_dict(player_class, player, action):
     if action[0] in "THROW":
         #If throw, add a symbol onto board

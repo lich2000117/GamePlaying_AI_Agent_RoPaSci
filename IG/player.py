@@ -64,6 +64,11 @@ class Player:
         add_action_to_play_dict(self, "opponent", opponent_action)
         add_action_to_play_dict(self, "player", player_action)
 
+        print("\n!!!!!!!!!!!!\nBEFORE ELIMINATION:\nplay_dict:", self.play_dict)
+        #print("\n\nthrows_left", self.throws_left)
+        #print("\n\nEnemy_throws_left", self.enemy_throws_left)
+        print("\n!!!!!!!!!!!!\n")
+
         # Calculate eliminations and update
         # after token actions, check if eliminate other tokens by following function
         eliminate_and_update_board(self,self.target_dict)
@@ -72,7 +77,7 @@ class Player:
 
         # if not reached whole board throw range, expanding the throw range
         update_throw_range(self)
-        print("\nafter round, play_dict:", self.play_dict)
-        print("\n\nthrows_left", self.throws_left)
-        print("\n\nEnemy_throws_left", self.enemy_throws_left)
-        print("\n\n")
+        print("\n************\nplay_dict:", self.play_dict)
+        #print("\n\nthrows_left", self.throws_left)
+        #print("\n\nEnemy_throws_left", self.enemy_throws_left)
+        print("\n***********\n")
