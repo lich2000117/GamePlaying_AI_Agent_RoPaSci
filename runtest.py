@@ -2,11 +2,16 @@
 import subprocess
 import os
 import sys
-import argparse
 
-PLAY_TIMES = 10
-PLAYER1 = 'IG'
-PLAYER2 = 'RandomEnemy'
+# config --------------------------------------------------------------------------------------
+PLAY_TIMES = 1000   # Match Times
+UPPER = 'IG'   # upper
+LOWER = 'RandomEnemy'    # lower
+SHOW_BUG_MATCH = True  # show match detail of a bugged match
+SHOW_TIMEOUT_MATCH = True  # show match detail of a timed out match
+# config --------------------------------------------------------------------------------------
+
+
 
 
 
@@ -23,9 +28,9 @@ def test_program(PLAY_TIMES):
             #convert output to string
         output = ""
         try:
-            output = subprocess.check_output(['python3', '-m', 'referee', PLAYER1, PLAYER2]).decode(sys.stdout.encoding)
+            output = subprocess.check_output(['python3', '-m', 'referee', UPPER, LOWER]).decode(sys.stdout.encoding)
         except:
-            output = subprocess.check_output(['python', '-m', 'referee', PLAYER1, PLAYER2]).decode(sys.stdout.encoding)
+            output = subprocess.check_output(['python', '-m', 'referee', UPPER, LOWER]).decode(sys.stdout.encoding)
 
         # get only last line of output
         result = output.splitlines()[-1]
@@ -40,9 +45,13 @@ def test_program(PLAY_TIMES):
             if "both" in result:
                 draws += 1
             else:
+                if SHOW_TIMEOUT_MATCH:
+                    print(output + " \n\n^^^^^^^^^^^^\nTIMEOUT Match Occurs!, \nMatch Detail above\n^^^^^^^^^^^^")
+                    return
                 timeout_draws += 1
         else:
-            print(output + " \n\n^^^^^^^^^^^^\nBUG Occurs!, \nMatch Detail above\n^^^^^^^^^^^^")
+            if SHOW_BUG_MATCH:
+                print(output + " \n\n^^^^^^^^^^^^\nBUG Occurs!, \nMatch Detail above\n^^^^^^^^^^^^")
             return
         i -= 1
     print("Total Plays: ", PLAY_TIMES)
