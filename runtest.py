@@ -6,7 +6,7 @@ import argparse
 
 PLAY_TIMES = 200
 PLAYER1 = 'IG'
-PLAYER2 = 'IG'
+PLAYER2 = 'Enemy'
 
 
 
