@@ -66,8 +66,7 @@ class Player:
 
         # Calculate eliminations and update
         # after token actions, check if eliminate other tokens by following function
-        eliminate_and_update_board(self, "player", self.target_dict)
-        eliminate_and_update_board(self, "opponent", self.target_dict)
+        eliminate_and_update_board(self,self.target_dict)
         self.game_round += 1
 
 

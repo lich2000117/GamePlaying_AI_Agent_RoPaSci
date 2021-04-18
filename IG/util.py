@@ -54,10 +54,16 @@ def get_symbol_by_location(whichplayer,play_dict,point):
         out += "r"
     elif point in find_player_symbols(play_dict, whichplayer, "p"):
         out += "p"
-    elif point in find_player_symbols(play_dict, whichplayer, "s")::
+    elif point in find_player_symbols(play_dict, whichplayer, "s"):
         out += "s"
     return out
 
+# Remove all symbols of that type at that location
+def remove_all_type_symbols_at_location(player_class, removetype, location):
+    player_class.play_dict["player"][removetype] = \
+                    list(filter(lambda a: a != location, player_class.play_dict["player"][removetype]))
+    player_class.play_dict["opponent"][removetype] = \
+                    list(filter(lambda a: a != location, player_class.play_dict["opponent"][removetype]))
 
 
 """ -------------------- PLAYER ACTION ---------------------"""
@@ -94,43 +100,24 @@ def update_throw_range(player_class):
 
 
 # If two symbols place together, determine what to do with play_dict
-def eliminate_and_update_board(play_class, whichplayer, target_dict):
+def eliminate_and_update_board(play_class,target_dict):
 
-    # for each symbol of the player, find each one's counter symbol
-    if whichplayer == "player":
-        player1 = "player"
-        player2 = "opponent"
-    else:
-        player2 = "player"
-        player1 = "opponent"
+    for symbol_type, target_symbol in target_dict.items():
+        #list of all locations of this type
+        list_locations_of_type = play_class.play_dict["player"][symbol_type]\
+                                + play_class.play_dict["opponent"][symbol_type]
+        #Iterate Through the locations and remove its target_symbol
+        for symbol in reversed(list_locations_of_type):
+            #  get what types are at location, 
+            types_at_location = set(get_symbol_by_location("player",play_class.play_dict, symbol)\
+                    + get_symbol_by_location("opponent",play_class.play_dict, symbol))
+            # if three types all occurs, remove all of them at that location
+            if (len(types_at_location) == 3):
+                remove_all_type_symbols_at_location(play_class,"s",symbol)
+                remove_all_type_symbols_at_location(play_class,"r",symbol)
+                remove_all_type_symbols_at_location(play_class,"p",symbol)
+            remove_all_type_symbols_at_location(play_class,target_symbol,symbol)
 
-    for symbol_type in play_class.play_dict[player1].keys():
-        for symbol in play_class.play_dict[player1][symbol_type]:
-            # # if Enemy has a symbol that can be eliminated by our player, remove opponent's symbol
-            # if target_dict[symbol_type] == get_symbol_by_location("opponent", play_dict, symbol)
-            #     play_dict.clear
-            # look whether it will eliminate any opponent's symbol
-            for token in reversed(play_class.play_dict[player2][target_dict[symbol_type]]):
-                if symbol == token:
-                    # remove opponent's token
-                    play_class.play_dict[player2][target_dict[symbol_type]].remove(token)
-                    # print("opponent's ", target_dict[type], token, "got eliminated\n")
-            # look whether it will eliminate self's symbol
-            for token in reversed(play_class.play_dict[player1][target_dict[symbol_type]]):
-                if symbol == token:
-                    play_class.play_dict[player1][target_dict[symbol_type]].remove(token)
-        
-            # look whether it will be eliminated by opponent
-            for token in reversed(play_class.play_dict[player2][target_dict[target_dict[symbol_type]]]):
-                if symbol == token:
-                    # remove player's symbol
-                    play_class.play_dict[player1][symbol_type].remove(symbol)
-                    # print("player's ", type, symbol, "got eliminated\n")
-            # look whether it will be eliminated by player's own symbol
-            for token in reversed(play_class.play_dict[player1][target_dict[symbol_type]]):
-                if symbol == token:
-                    play_class.play_dict[player1][symbol_type].remove(symbol)
-                    # print("player's ", type, symbol, "got eliminated by itself\n")
 
 
 
