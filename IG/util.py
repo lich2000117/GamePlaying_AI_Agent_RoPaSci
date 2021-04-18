@@ -5,11 +5,11 @@ import random
 # return number of nodes count in player_class
 # return:
 #       {"s": 4, "r":2, "p":1}      #4 Scissors, 2 rock, 1 paper
-def get_current_player_nodes_count(player_class):
+def get_current_player_nodes_count(player_class, player_side):
     count_dict = {}
-    count_dict["r"] = len(player_class.play_dict["player"]["r"])
-    count_dict["p"] = len(player_class.play_dict["player"]["p"])
-    count_dict["s"] = len(player_class.play_dict["player"]["s"])
+    count_dict["r"] = len(player_class.play_dict[player_side]["r"])
+    count_dict["p"] = len(player_class.play_dict[player_side]["p"])
+    count_dict["s"] = len(player_class.play_dict[player_side]["s"])
     return count_dict
 
 
@@ -154,8 +154,8 @@ def check_node_in_throw_range(player_class, point):
     throw_row = point[0]
     valid_row = player_class.throw_range
 
-    print("\n\n\ncheck node", point)
-    print("throw range is :", (valid_row))
+    #print("\n\n\ncheck node", point)
+    #print("throw range is :", (valid_row))
     if throw_row in valid_row:
         print("True")
         return True

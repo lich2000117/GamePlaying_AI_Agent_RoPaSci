@@ -4,9 +4,9 @@ import os
 import sys
 
 # config --------------------------------------------------------------------------------------
-PLAY_TIMES = 1000   # Match Times
+PLAY_TIMES = 400   # Match Times
 UPPER = 'IG'   # upper
-LOWER = 'RandomEnemy'    # lower
+LOWER = 'IG_NO_TUNE'    # lower
 SHOW_BUG_MATCH = True  # show match detail of a bugged match
 SHOW_TIMEOUT_MATCH = True  # show match detail of a timed out match
 # config --------------------------------------------------------------------------------------
@@ -19,7 +19,8 @@ SHOW_TIMEOUT_MATCH = True  # show match detail of a timed out match
 def test_program(PLAY_TIMES):
     upper_wins = 0
     lower_wins = 0
-    draws = 0
+    invincible_draws = 0
+    same_state_draws = 0
     timeout_draws = 0
     i = PLAY_TIMES
     while (i):
@@ -43,7 +44,9 @@ def test_program(PLAY_TIMES):
         elif "draw" in result:
             # if draw because of both side has invincible symbol
             if "both" in result:
-                draws += 1
+                invincible_draws += 1
+            elif "same" in result:
+                same_state_draws += 1
             else:
                 if SHOW_TIMEOUT_MATCH:
                     print(output + " \n\n^^^^^^^^^^^^\nTIMEOUT Match Occurs!, \nMatch Detail above\n^^^^^^^^^^^^")
@@ -54,12 +57,19 @@ def test_program(PLAY_TIMES):
                 print(output + " \n\n^^^^^^^^^^^^\nBUG Occurs!, \nMatch Detail above\n^^^^^^^^^^^^")
             return
         i -= 1
+    print("\n=======================================\n")
     print("Total Plays: ", PLAY_TIMES)
-    print("Upper Win Rate:", round(upper_wins/PLAY_TIMES,2))
-    print("Lower Win Rate:", round(lower_wins/PLAY_TIMES,2))
-    print("Draw Rate:", round(draws/PLAY_TIMES,2))
-    print("Timeout Rate:", round(timeout_draws/PLAY_TIMES,2))
-
+    print("Upper:", UPPER)
+    print("Lower:", LOWER)
+    print("---------------------------------------------")
+    print("\Win' RATE: \n")
+    print("  "+UPPER + " WIN RATE: ", round(upper_wins/PLAY_TIMES,2))
+    print("  "+LOWER + " WIN RATE: ", round(lower_wins/PLAY_TIMES,2))
+    print("\nDRAW RATE: \n")
+    print("  Both Invincible Rate:", round(invincible_draws/PLAY_TIMES,2))
+    print("  Same State Rate:", round(same_state_draws/PLAY_TIMES,2))
+    print("  Timeout Rate:", round(timeout_draws/PLAY_TIMES,2))
+    print("\n=======================================\n")
 
 test_program(PLAY_TIMES)
 

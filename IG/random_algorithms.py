@@ -13,19 +13,29 @@ def random_throw(player_class):
 
 
 # the throw symbol is the least symbols player currently have
-def refined_random_throw(player_class):
+def refined_random_throw(player_class, mode):
     #randomly generate valid throw range
     random_row_num = random.choice(player_class.throw_range)
     random_col_num = random.randint(-(4 - abs(random_row_num)), 4 - abs(random_row_num))
     target_point = (random_row_num, random_col_num)
     symbol_type = random.choice(["s", "p", "r"])  #random select symbol
-    count_dict = get_current_player_nodes_count(player_class)
-    # if no nodes on board, random choose type
-    if sum(count_dict.values()) <= 0:
-        symbol_type = random.choice(["s", "p", "r"])
-    else:
-        # choose symbol_type that player currently least have
-        symbol_type = sorted(count_dict, key=count_dict.get)[0]
+    player_count_dict = get_current_player_nodes_count(player_class, "player")
+    enemy_count_dict = get_current_player_nodes_count(player_class, "opponent")
+    # choose strategy according to mode
+    if mode == "defense":
+        if sum(player_count_dict.values()) <= 0:
+            # if no symbols, random select
+            symbol_type = random.choice(["s", "p", "r"])
+        else:
+            # choose symbol_type that player currently least have
+            symbol_type = sorted(player_count_dict, key=player_count_dict.get)[0]
+    elif mode == "attack":
+        if sum(enemy_count_dict.values()) <= 0:
+            # if no symbols, random select
+            symbol_type = random.choice(["s", "p", "r"])
+        else:
+            # choose counter symbol type that enemy have most for attack
+            symbol_type = player_class.target_dict[sorted(enemy_count_dict, key=enemy_count_dict.get, reverse= True)[0]]
     return action_throw(symbol_type, target_point)
 
 
@@ -40,7 +50,7 @@ def random_action(player_class):
     action_num = random.randint(0,1)
 
     # if no symbol on board, must throw
-    if sum(get_current_player_nodes_count(player_class).values()) <= 0:
+    if sum(get_current_player_nodes_count(player_class, "player").values()) <= 0:
         if player_class.throws_left <= 0:
             print("Error! play_dict is empty and no throw left")
             assert(1==0)

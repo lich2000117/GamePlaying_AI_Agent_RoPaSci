@@ -11,12 +11,14 @@ def BFS_Action(player_class, play_dict, target_dict):
         target_list = find_player_symbols(player_class.play_dict, "opponent", symbol_type)
         # Check if player have counter symbol and Enemy have symbols can be eliminate
         if (player_counter_list) and (target_list):
-            ''' if using nearest node to eliminate others, sort the player_tokens'''
-            #if player_class.TUNEMODE:
-                #start_token = near_list[0]
-            #else:
-            start_token = player_counter_list[0] 
             target = target_list[0] 
+            ''' 
+            if using neareest node to eliminate others, sort the player_counter_list
+            choosing closest node to target
+            '''
+            if player_class.BFS_TUNE_MODE:
+                player_counter_list = sorted(player_counter_list, key=lambda x : least_distance(x, target))
+            start_token = player_counter_list[0] 
             # BFS search, dodges blocks, returns a path
             next_board_dict = play_dict
             try: 
@@ -54,7 +56,7 @@ def greedy_action(player_class):
     # Move first,
     # Throw and Eat Enemy directly
     '''
-    num_nodes = sum(get_current_player_nodes_count(player_class).values())
+    num_nodes = sum(get_current_player_nodes_count(player_class, "player").values())
 
     # if there's symbol on board, do BFS first then throw
     
@@ -76,9 +78,23 @@ def greedy_action(player_class):
     # RANDOM MOVE
     # if cannot greedy throw and cannot do BFS, do random swing or slide
     if num_nodes > 0:
+        # if reached same game state three times, breakt the tie
+        if (player_class.same_state_count >= 3) and (player_class.BREAK_TIE):
+
+            # break tie by random throw
+            if (player_class.throws_left>0):
+                print("\n^^^^^^^^^^^^^^BREAKING TIE, THROW^^^^^^^^^^^^^^^\n")
+                if (player_class.REFINED_THROW):
+                    return refined_random_throw(player_class, player_class.REFINED_THROW)
+                else:
+                    return random_throw(player_class)
         print("\n^^^^^^^^^^^^^^RANDOM SWING/SLIDE^^^^^^^^^^^^^^^\n")
         return do_random_slide_swing(player_class)
-    print("\n^^^^^^^^^^^^^^RANDOM SWING/SLIDE^^^^^^^^^^^^^^^\n") 
-    return refined_random_throw(player_class)
+    print("\n^^^^^^^^^^^^^^RANDOM THROW^^^^^^^^^^^^^^^\n") 
+
+    if (player_class.REFINED_THROW):
+        return refined_random_throw(player_class, player_class.REFINED_THROW)
+    else:
+        return random_throw(player_class)
 
     
