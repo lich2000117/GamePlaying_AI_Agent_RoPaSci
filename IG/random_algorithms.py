@@ -1,6 +1,7 @@
 import random
 from IG.util import *
 
+# random throw a symbol at random location
 def random_throw(player_class):
     
     #randomly generate valid throw range
@@ -9,6 +10,24 @@ def random_throw(player_class):
     target_point = (random_row_num, random_col_num)
     symbol_type = random.choice(["s", "p", "r"])  #random select symbol
     return action_throw(symbol_type, target_point)
+
+
+# the throw symbol is the least symbols player currently have
+def refined_random_throw(player_class):
+    #randomly generate valid throw range
+    random_row_num = random.choice(player_class.throw_range)
+    random_col_num = random.randint(-(4 - abs(random_row_num)), 4 - abs(random_row_num))
+    target_point = (random_row_num, random_col_num)
+    symbol_type = random.choice(["s", "p", "r"])  #random select symbol
+    count_dict = get_current_player_nodes_count(player_class)
+    # if no nodes on board, random choose type
+    if sum(count_dict.values()) <= 0:
+        symbol_type = random.choice(["s", "p", "r"])
+    else:
+        # choose symbol_type that player currently least have
+        symbol_type = sorted(count_dict, key=count_dict.get)[0]
+    return action_throw(symbol_type, target_point)
+
 
 
    

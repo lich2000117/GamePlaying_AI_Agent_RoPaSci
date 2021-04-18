@@ -38,7 +38,7 @@ class Player:
         of the game, select an action to play this turn.
         """
         # Random Action defined in random_algorithms.py
-        return random_action(self)
+        #return random_action(self)
         
 
 

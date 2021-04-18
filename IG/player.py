@@ -1,5 +1,6 @@
 from IG.util import *
-from IG.random_algorithms import *
+#from IG.random_algorithms import *
+from IG.greedy_strategy import *
 
 class Player:
     
@@ -12,6 +13,7 @@ class Player:
         play as Upper), or the string "lower" (if the instance will play
         as Lower).
         """
+        self.TUNE_MODE = True  # If using refined algorithms (get nearest nodes, do random choosing to optimise game play)
         self.game_round = 1
         self.throws_left = 9   # reduced by 1 after each throw in util/put_action_board function
         self.enemy_throws_left = 9
@@ -38,16 +40,8 @@ class Player:
         of the game, select an action to play this turn.
         """
         # Random Action defined in random_algorithms.py
-        return random_action(self)
+        return greedy_action(self)
         
-
-
-        #throw at the farest possible grid
-        #action = ("THROW","s", (1,0))
-        for i in self.throw_range:
-            a = 1
-        
-        return ("THROW","s", (i,0))
     
     def update(self, opponent_action, player_action):
         """
@@ -64,10 +58,10 @@ class Player:
         add_action_to_play_dict(self, "opponent", opponent_action)
         add_action_to_play_dict(self, "player", player_action)
 
-        print("\n!!!!!!!!!!!!\nBEFORE ELIMINATION:\nplay_dict:", self.play_dict)
+        #print("\n!!!!!!!!!!!!\nBEFORE ELIMINATION:\nplay_dict:", self.play_dict)
         #print("\n\nthrows_left", self.throws_left)
         #print("\n\nEnemy_throws_left", self.enemy_throws_left)
-        print("\n!!!!!!!!!!!!\n")
+        #print("\n!!!!!!!!!!!!\n")
 
         # Calculate eliminations and update
         # after token actions, check if eliminate other tokens by following function
@@ -77,7 +71,7 @@ class Player:
 
         # if not reached whole board throw range, expanding the throw range
         update_throw_range(self)
-        print("\n************\nplay_dict:", self.play_dict)
+        #print("\n************\nplay_dict:", self.play_dict)
         #print("\n\nthrows_left", self.throws_left)
         #print("\n\nEnemy_throws_left", self.enemy_throws_left)
-        print("\n***********\n")
+        #print("\n***********\n")

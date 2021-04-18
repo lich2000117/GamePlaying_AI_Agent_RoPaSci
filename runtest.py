@@ -4,9 +4,9 @@ import os
 import sys
 import argparse
 
-PLAY_TIMES = 200
+PLAY_TIMES = 10
 PLAYER1 = 'IG'
-PLAYER2 = 'Enemy'
+PLAYER2 = 'RandomEnemy'
 
 
 

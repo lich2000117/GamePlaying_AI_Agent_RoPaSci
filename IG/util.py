@@ -12,6 +12,7 @@ def get_current_player_nodes_count(player_class):
     count_dict["s"] = len(player_class.play_dict["player"]["s"])
     return count_dict
 
+
 # this function returns how many steps for a symbol to move the position of 
 # another symbol, it takes the positions of two symbols as input
 # from position1 to position2
@@ -113,12 +114,10 @@ def eliminate_and_update_board(play_class,target_dict):
                     + get_symbol_by_location("opponent",play_class.play_dict, symbol))
             # if three types all occurs, remove all of the symbols of all types at that location
             if (len(types_at_location) == 3):
-                print("&&&&&&&&&&&&&&&&& REMOVING ALL TYPES&&&&&&&&&&&&&&&&&&")
                 remove_all_type_symbols_at_location(play_class,"s",symbol)
                 remove_all_type_symbols_at_location(play_class,"r",symbol)
                 remove_all_type_symbols_at_location(play_class,"p",symbol)
             remove_all_type_symbols_at_location(play_class,target_symbol,symbol)
-            print("\n\n(((((((((((((((((((( types_at_location: ", types_at_location)
 
 
 
@@ -149,3 +148,16 @@ def add_action_to_play_dict(player_class, player, action):
         player_class.play_dict[player][symbol_type].append(move_to)
         
 
+# Check if a node is in current throw range
+def check_node_in_throw_range(player_class, point):
+    throw_col = point[1]
+    throw_row = point[0]
+    valid_row = player_class.throw_range
+
+    print("\n\n\ncheck node", point)
+    print("throw range is :", (valid_row))
+    if throw_row in valid_row:
+        print("True")
+        return True
+    print("False")
+    return False

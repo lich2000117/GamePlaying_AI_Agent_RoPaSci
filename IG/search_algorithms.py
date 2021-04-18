@@ -50,22 +50,22 @@ def least_distance(position1, position2):
 # cur_point: (x,y)
 # tar_point: (x,y)
 def check_counter_node(next_board_dict, type, tar_point):
-    R_node_list = find_player_symbols(next_board_dict, "upper", "R") + find_player_symbols(next_board_dict, "lower", "R")
-    P_node_list = find_player_symbols(next_board_dict, "upper", "P") + find_player_symbols(next_board_dict, "lower", "P")
-    S_node_list = find_player_symbols(next_board_dict, "upper", "S") + find_player_symbols(next_board_dict, "lower", "S")
-    upper_R_list = find_player_symbols(next_board_dict, "upper", "R")
-    upper_P_list = find_player_symbols(next_board_dict, "upper", "P")
-    upper_S_list = find_player_symbols(next_board_dict, "upper", "S")
+    R_node_list = find_player_symbols(next_board_dict, "player", "r") + find_player_symbols(next_board_dict, "opponent", "r")
+    P_node_list = find_player_symbols(next_board_dict, "player", "p") + find_player_symbols(next_board_dict, "opponent", "p")
+    S_node_list = find_player_symbols(next_board_dict, "player", "s") + find_player_symbols(next_board_dict, "opponent", "s")
+    upper_R_list = find_player_symbols(next_board_dict, "player", "r")
+    upper_P_list = find_player_symbols(next_board_dict, "player", "p")
+    upper_S_list = find_player_symbols(next_board_dict, "player", "s")
     # Rock eaten by Paper or eliminate friendly Sissors
-    if type == "R":
+    if type == "r":
         if (tar_point in P_node_list) or (tar_point in upper_S_list):
             return False
     # Paper eaten by Scissor or eliminate friendly Rocks
-    if type == "P":
+    if type == "p":
         if (tar_point in S_node_list) or (tar_point in upper_R_list):
             return False
     # Scissor eaten by Rock or eliminate friendly Paper
-    if type == "S":
+    if type == "s":
         if (tar_point in R_node_list) or (tar_point in upper_P_list):
             return False
     return True
@@ -111,7 +111,7 @@ def get_children(type, visited, play_dict, cur_point, end, next_board_dict):
 
     #Add swing nodes:
     #for point in next_point_list:
-    upper_token_list = [item for sublist in play_dict["upper"].values() for item in sublist]
+    upper_token_list = [item for sublist in play_dict["player"].values() for item in sublist]
     for point in next_point_list:
         if point in upper_token_list:
             swing_node = []
