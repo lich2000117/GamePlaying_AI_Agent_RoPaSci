@@ -4,7 +4,7 @@ import os
 import sys
 
 # config --------------------------------------------------------------------------------------
-PLAY_TIMES = 400   # Match Times
+PLAY_TIMES = 50   # Match Times
 UPPER = 'IG'   # upper
 LOWER = 'IG_NO_TUNE'    # lower
 SHOW_BUG_MATCH = True  # show match detail of a bugged match
