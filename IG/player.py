@@ -82,7 +82,7 @@ class Player:
 
         #Check Repeated Game State:
         cur_game_state = (get_current_player_nodes_count(self, "player"), get_current_player_nodes_count(self, "opponent"))
-        if (cur_game_state[0].values() == prev_game_state[0].values()) and (cur_game_state[1].values() == prev_game_state[1].values()):
+        if (cur_game_state == prev_game_state):
             self.same_state_count += 1
         else:
             self.same_state_count = 0

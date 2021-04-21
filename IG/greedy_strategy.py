@@ -58,6 +58,18 @@ def greedy_action(player_class):
     '''
     num_nodes = sum(get_current_player_nodes_count(player_class, "player").values())
 
+
+    # if reached same game state three times, break the tie
+    if (player_class.same_state_count >= 3) and (player_class.BREAK_TIE):
+        # break tie by random throw
+        if (player_class.throws_left>0):
+            print("\n^^^^^^^^^^^^^^BREAKING TIE, THROW^^^^^^^^^^^^^^^\n")
+            if (player_class.REFINED_THROW):
+                return refined_random_throw(player_class, player_class.REFINED_THROW)
+            else:
+                return random_throw(player_class)
+
+
     # if there's symbol on board, do BFS first then throw
     
     #BFS
@@ -78,16 +90,6 @@ def greedy_action(player_class):
     # RANDOM MOVE
     # if cannot greedy throw and cannot do BFS, do random swing or slide
     if num_nodes > 0:
-        # if reached same game state three times, breakt the tie
-        if (player_class.same_state_count >= 3) and (player_class.BREAK_TIE):
-
-            # break tie by random throw
-            if (player_class.throws_left>0):
-                print("\n^^^^^^^^^^^^^^BREAKING TIE, THROW^^^^^^^^^^^^^^^\n")
-                if (player_class.REFINED_THROW):
-                    return refined_random_throw(player_class, player_class.REFINED_THROW)
-                else:
-                    return random_throw(player_class)
         print("\n^^^^^^^^^^^^^^RANDOM SWING/SLIDE^^^^^^^^^^^^^^^\n")
         return do_random_slide_swing(player_class)
     print("\n^^^^^^^^^^^^^^RANDOM THROW^^^^^^^^^^^^^^^\n") 

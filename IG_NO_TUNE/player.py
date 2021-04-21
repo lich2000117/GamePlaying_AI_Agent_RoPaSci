@@ -14,10 +14,10 @@ class Player:
         as Lower).
         """
         #Config
-        self.REFINED_THROW = "defense"
-        self.BFS_TUNE_MODE = False  # If using refined algorithms (get nearest nodes for BFS)
+        self.REFINED_THROW = ""  # empty string: random throw symbols, "attack": throw enemy most symbols' counter, "defense": throw player's least symbol for supply
+        self.BFS_TUNE_MODE = True  # If using refined algorithms (get nearest nodes for BFS)
         self.BREAK_TIE = True  # check if will break the tie when reaching same game state three times
-        
+
         
         self.game_round = 1
         self.throws_left = 9   # reduced by 1 after each throw in util/put_action_board function
@@ -82,7 +82,7 @@ class Player:
 
         #Check Repeated Game State:
         cur_game_state = (get_current_player_nodes_count(self, "player"), get_current_player_nodes_count(self, "opponent"))
-        if cur_game_state == prev_game_state:
+        if (cur_game_state == prev_game_state):
             self.same_state_count += 1
         else:
             self.same_state_count = 0
