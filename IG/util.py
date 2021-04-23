@@ -33,7 +33,7 @@ def is_point_on_map(play_dict, cur_point):
         return True
 
 #return a string for point's symbol given a location, two together means it has multiple symbol at that point
-def get_symbol_by_location(whichplayer,play_dict,point):
+def get_symbol_by_location(whichplayer, play_dict, point):
     out = ""
     if point in find_player_symbols(play_dict, whichplayer, "r"):
         out += "r"
