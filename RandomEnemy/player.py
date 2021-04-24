@@ -1,5 +1,5 @@
-from IG.util import *
 from IG.random_algorithms import *
+from IG.util import *
 
 class Player:
     

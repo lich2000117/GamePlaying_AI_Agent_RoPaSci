@@ -2,13 +2,11 @@ from IG.search_algorithms import *
 import random
 
 
-<<<<<<< Updated upstream
 # move token from start to end 
 def move_token(symbol_type, start, end, play_dict):
     # move the token by adding new position
     play_dict["player"][symbol_type].remove(start)
     
-=======
 # return number of nodes count in player_class
 # return:
 #       {"s": 4, "r":2, "p":1}      #4 Scissors, 2 rock, 1 paper
@@ -70,7 +68,6 @@ def Init_throw_range(player_class):
     else:
         player_class.throw_range = range(-4, -3)
         player_class.side = "lower"
->>>>>>> Stashed changes
 
 # If two symbols place together, determine what to do with board_dict
 def eliminate_and_update_board(play_dict, target_dict):
