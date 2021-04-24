@@ -8,6 +8,7 @@
 # self.target_dict = {"r":"s", "s":"p", "p":"r"}
 
 from IG2.util import least_distance, get_symbol_by_location
+from IG2.path_search import get_six_adj_nodes, Search_Path
 
 def analyse_current_situation(self):
     '''Do various kinds of analysis of the situation on the board and send the recognized info to the 
@@ -37,6 +38,7 @@ def analyse_history(self):
     return [token_type, same_token_move_count, current_move[2]]
 
 def hostile_tokens(self):
+
     # return list of tuples, each tuple contains (type, cur_postion, distance to eat my token, my_token_pos)
     # 
     hostile_tokens = []  
@@ -50,3 +52,22 @@ def hostile_tokens(self):
                     hostile_tokens.append((enemy, enemy_token, least_distance(enemy_token, token), token))
     hostile_tokens = sorted(hostile_tokens, key=lambda x: x[2])
     return hostile_tokens
+
+def isSupportOnTime(self, token_under_threat_pos, counter_pos, hostile_token_pos):
+    intercept_points = get_six_adj_nodes(token_under_threat_pos)
+    intercept_points.sort(key=lambda x: least_distance(x, hostile_tokens))
+    intercept_points = [intercept_points[0], intercept_points[1]]
+
+    counter_type = get_symbol_by_location("player", self.play_dict, counter_pos)
+    hostile_token_type = get_symbol_by_location("opponent", self.play_dict, hostile_token_pos)
+
+    for point in intercept_points:
+        counter_path = Search_Path(counter_type, counter_pos, point, self.play_dict)
+        hostile_path = Search_Path(hostile_token_type, hostile_token_pos, point, self.play_dict)
+        if len(counter_path) > len(hostile_path):
+            return False
+    return True
+
+
+
+
