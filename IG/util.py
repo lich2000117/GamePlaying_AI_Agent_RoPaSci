@@ -1,6 +1,28 @@
 from IG.search_algorithms import *
 import random
 
+def add_action_to_play_dict(player_class, player, action):
+    if action[0] in "THROW":
+        #If throw, add a symbol onto board
+        symbol_type = action[1]
+        location = action[2]
+        player_class.play_dict[player][symbol_type].append(location)
+        #reduce available throw times by 1
+        if player == "opponent":
+            player_class.enemy_throws_left -= 1
+        else:
+            player_class.throws_left -= 1
+        update_throw_range(player_class)
+    else:
+        move_from = action[1]
+        symbol_type = get_symbol_by_location(player, player_class.play_dict, move_from)
+        move_to = action[2]
+        # move token from start to end, simply update play_dict
+
+        # move the token by adding new position and remove old one
+        player_class.play_dict[player][symbol_type].remove(move_from)
+        player_class.play_dict[player][symbol_type].append(move_to)
+
 
 # move token from start to end 
 def move_token(symbol_type, start, end, play_dict):
@@ -17,6 +39,14 @@ def get_current_player_nodes_count(player_class, player_side):
     count_dict["s"] = len(player_class.play_dict[player_side]["s"])
     return count_dict
 
+
+def update_throw_range(player_class):
+    # add throw range
+    if len(player_class.throw_range) < 9:
+        if (player_class.side == "upper"):
+            player_class.throw_range = range(player_class.throws_left-5,5)
+        else:
+            player_class.throw_range = range(-4, 6-player_class.throws_left)
 
 # params:
 #           cur_point = (x_coordinate, y_coordinate)
@@ -115,7 +145,7 @@ def put_action_to_board(player_class, player, action, play_dict):
         #symbol_type =   #need to call type look up
         start = action[1]
         end = action[2]
-        move_token(symbol_type, start, end, self.play_dict)
+        move_token(symbol_type, start, end, player.play_dict)
 
 
 

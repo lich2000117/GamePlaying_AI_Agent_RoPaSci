@@ -8,7 +8,7 @@ def random_throw(player_class):
     random_col_num = random.randint(-(4 - abs(random_row_num)), 4 - abs(random_row_num))
     target_point = (random_row_num, random_col_num)
     symbol_type = random.choice(["s", "p", "r"])  #random select symbol
-    return action_throw(player_class, symbol_type, target_point)
+    return action_throw(symbol_type, target_point)
 
 
    
@@ -21,7 +21,7 @@ def random_action(player_class):
     action_num = random.randint(0,1)
 
     # if no symbol on board, must throw
-    if sum(get_current_player_nodes_count(player_class).values()) <= 0:
+    if sum(get_current_player_nodes_count(player_class, player_class.player_side).values()) <= 0:
         if player_class.throws_left <= 0:
             print("Error! play_dict is empty and no throw left")
             assert(1==0)

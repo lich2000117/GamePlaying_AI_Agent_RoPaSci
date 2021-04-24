@@ -16,6 +16,7 @@ class Player:
         self.throws_left = 9   # reduced by 1 after each throw in util/put_action_board function
         self.enemy_throws_left = 9
         self.side = player
+        self.throw_range = ()
         # Determine throw range according to different locations
         Init_throw_range(self)
 
