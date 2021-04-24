@@ -2,6 +2,13 @@ from IG.search_algorithms import *
 import random
 
 
+<<<<<<< Updated upstream
+# move token from start to end 
+def move_token(symbol_type, start, end, play_dict):
+    # move the token by adding new position
+    play_dict["player"][symbol_type].remove(start)
+    
+=======
 # return number of nodes count in player_class
 # return:
 #       {"s": 4, "r":2, "p":1}      #4 Scissors, 2 rock, 1 paper
@@ -12,29 +19,6 @@ def get_current_player_nodes_count(player_class, player_side):
     count_dict["s"] = len(player_class.play_dict[player_side]["s"])
     return count_dict
 
-
-# this function returns how many steps for a symbol to move the position of 
-# another symbol, it takes the positions of two symbols as input
-# from position1 to position2
-    # p1 = (0,0)
-    # p2 = (-1,-2)
-    # print(least_distance(p1,p2), " step(s) between (", p1[0], p1[1] ,") and (", p2[0], p2[1], ")")
-    
-def least_distance(position1, position2):
-    # case1: top-right area
-    total_distance = 0
-    if position2[0] >= position1[0] and position2[1] >= position1[1]:
-        total_distance = position2[0] + position2[1] - position1[0] - position1[1]
-    # case2: bot-left area
-    elif position2[0] <= position1[0] and position2[1] <= position1[1]:
-        total_distance = position1[0] + position1[1] - position2[0] - position2[1]
-    # case3: bot-right area
-    elif position2[0] < position1[0] and position2[1] > position1[1]:
-        total_distance = max(position1[0] - position2[0], position2[1] - position1[1])
-    # case4: top-left area
-    else:
-        total_distance = max(position2[0] - position1[0], position1[1] - position2[1])
-    return total_distance
 
 # params:
 #           cur_point = (x_coordinate, y_coordinate)
@@ -49,7 +33,7 @@ def is_point_on_map(play_dict, cur_point):
         return True
 
 #return a string for point's symbol given a location, two together means it has multiple symbol at that point
-def get_symbol_by_location(whichplayer,play_dict,point):
+def get_symbol_by_location(whichplayer, play_dict, point):
     out = ""
     if point in find_player_symbols(play_dict, whichplayer, "r"):
         out += "r"
@@ -86,78 +70,55 @@ def Init_throw_range(player_class):
     else:
         player_class.throw_range = range(-4, -3)
         player_class.side = "lower"
+>>>>>>> Stashed changes
 
-# Update throw range for each player
-def update_throw_range(player_class):
-    # add throw range
-    if len(player_class.throw_range) < 9:
-        if (player_class.side == "upper"):
-            player_class.throw_range = range(player_class.throws_left-5,5)
-        else:
-            player_class.throw_range = range(-4, 6-player_class.throws_left)
-
-""" -------------------- PLAYER ACTION ---------------------"""
-
-
-
-# If two symbols place together, determine what to do with play_dict
-def eliminate_and_update_board(play_class,target_dict):
-
-    for symbol_type, target_symbol in target_dict.items():
-        #list of all locations of this type
-        list_locations_of_type = play_class.play_dict["player"][symbol_type]\
-                                + play_class.play_dict["opponent"][symbol_type]
-        #Iterate Through the locations and remove its target_symbol
-        for symbol in reversed(list_locations_of_type):
-            #  get what types are at location, 
-            types_at_location = set(get_symbol_by_location("player",play_class.play_dict, symbol)\
-                    + get_symbol_by_location("opponent",play_class.play_dict, symbol))
-            # if three types all occurs, remove all of the symbols of all types at that location
-            if (len(types_at_location) == 3):
-                remove_all_type_symbols_at_location(play_class,"s",symbol)
-                remove_all_type_symbols_at_location(play_class,"r",symbol)
-                remove_all_type_symbols_at_location(play_class,"p",symbol)
-            remove_all_type_symbols_at_location(play_class,target_symbol,symbol)
-
-
+# If two symbols place together, determine what to do with board_dict
+def eliminate_and_update_board(play_dict, target_dict):
+    for type in play_dict["player"].keys():
+        # for each symbol of the player
+        for symbol in play_dict["player"][type]:
+            # look whether it can eliminate any opponent's symbol
+            for token in play_dict["opponent"][target_dict[type]]:
+                if symbol == token:
+                    # remove opponent's token
+                    play_dict["opponent"][target_dict[type]].remove(token)
+                    # print("opponent's ", target_dict[type], token, "got eliminated\n")
+            # look whether it will eliminate player's symbol
+            for token in play_dict["player"][target_dict[type]]:
+                if symbol == token:
+                    # remove opponent's token
+                    play_dict["player"][target_dict[type]].remove(token)
+                    # print("player's ", target_dict[type], token, "got eliminated by itself\n")
+        
+            # look whether it will be eliminated
+            for token in play_dict["opponent"][target_dict[target_dict[type]]]:
+                if symbol == token:
+                    # remove player's symbol
+                    play_dict["player"][type].remove(symbol)
+                    # print("player's ", type, symbol, "got eliminated\n")
+            # look whether it will be eliminated by player's own symbol
+            for token in play_dict["player"][target_dict[type]]:
+                if symbol == token:
+                    # remove player's token
+                    play_dict["player"][type].remove(symbol)
+                    # print("player's ", type, symbol, "got eliminated by itself\n")
 
 
-#update play_dict according to player's action, just add symbol, not checking elimination
-def add_action_to_play_dict(player_class, player, action):
+
+#update board according to player's action
+def put_action_to_board(player_class, player, action, play_dict):
     if action[0] in "THROW":
         #If throw, add a symbol onto board
         symbol_type = action[1]
         location = action[2]
-        player_class.play_dict[player][symbol_type].append(location)
+        play_dict[player][symbol_type].append(location)
         #reduce available throw times by 1
-        if player == "opponent":
-            player_class.enemy_throws_left -= 1
-        else:
-            player_class.throws_left -= 1
+        player_class.throws_left -= 1
     else:
-        move_from = action[1]
-        symbol_type = get_symbol_by_location(player,player_class.play_dict,move_from)
-        assert(len(symbol_type) == 1)
-        move_to = action[2]
-        # move token from start to end, simply update play_dict
-        #print("\n\n***\nstart:  ",move_from)
-        #print("\n\n***\n type:  ",symbol_type)
+        #symbol_type =   #need to call type look up
+        start = action[1]
+        end = action[2]
+        move_token(symbol_type, start, end, self.play_dict)
 
-        # move the token by adding new position and remove old one
-        player_class.play_dict[player][symbol_type].remove(move_from)
-        player_class.play_dict[player][symbol_type].append(move_to)
-        
 
-# Check if a node is in current throw range
-def check_node_in_throw_range(player_class, point):
-    throw_col = point[1]
-    throw_row = point[0]
-    valid_row = player_class.throw_range
 
-    #print("\n\n\ncheck node", point)
-    #print("throw range is :", (valid_row))
-    if throw_row in valid_row:
-        print("True")
-        return True
-    print("False")
-    return False

@@ -103,8 +103,6 @@ def get_six_adj_nodes(cur_point):
 # returns a list of children's location and visited nodes
 def get_children(type, visited, play_dict, cur_point, end, next_board_dict):
     children_list = []
-    cur_X = cur_point[0]
-    cur_Y = cur_point[1]
 
     priority_list = []
     next_point_list = get_six_adj_nodes(cur_point)   #get six adj nodes

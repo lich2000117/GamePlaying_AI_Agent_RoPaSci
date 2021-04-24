@@ -1,4 +1,6 @@
 from IG2.util import Init_throw_range, add_action_to_play_dict, eliminate_and_update_board
+from IG2.defensive import defensive_action, open_game_stragety
+from IG2.aggressive import aggressive_action
 
 class Player:
     
@@ -11,13 +13,18 @@ class Player:
         play as Upper), or the string "lower" (if the instance will play
         as Lower).
         """
-        #Config
-        self.mod = "defense"  # empty string: random throw symbols, "attack": throw enemy most symbols' counter, "defense": throw player's least symbol for supply
+
+        # used to determine the strategy for several turns
+        self.mod = "defensive"  
+        # a flag used to determine the next immediate move
+        self.status = "defensive"  #can be "awaiting prey", "check kill", "kill confirm"
+        self.IsAdvantageous = "draw"
+
         self.game_round = 1
-        self.throws_left = 9   # reduced by 1 after each throw in util/put_action_board function
+        self.throws_left = 9   # reduced by 1 after each throw in util/add_action_board function
         self.enemy_throws_left = 9
         self.side = player
-        self.same_state_count = 0  # count of same game state, if reach 3, break the tie to avoid draw
+
         # Determine throw range according to different locations
         self.throw_range = tuple()
         self.enemy_throws_range = tuple()
@@ -25,6 +32,7 @@ class Player:
 
         # list used to record the history of enemy movement
         self.enemy_move_history = []
+        self.log_history = []  # used to output for further analysis after the game
         self.history_limit = 5
 
         # play_dict is used to store symbols for each player
@@ -42,8 +50,15 @@ class Player:
         Called at the beginning of each turn. Based on the current state
         of the game, select an action to play this turn.
         """
-        # Random Action defined in random_algorithms.py
-        return 
+        # hard code the first three rounds to lay out my defensive 
+        if self.game_round <= 3:
+            return open_game_stragety(self)
+        else:
+            if self.mod == "defensive":
+                return defensive_action(self)
+            if self.mod == "aggressive":
+                return defensive_action(self) 
+
         
     
     def update(self, opponent_action, player_action):
@@ -58,7 +73,6 @@ class Player:
         # do not calculate elimination now, just update symbols to play_dict
         # add each player's action to board for the reason of synchronising play.
         # if throw, also reduce throws left by 1
-        
         if len(self.enemy_move_history) < self.history_limit:
             self.enemy_move_history.insert(0, opponent_action)
         else:

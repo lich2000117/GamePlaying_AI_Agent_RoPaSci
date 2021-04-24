@@ -40,6 +40,26 @@ def update_throw_range(player_class):
         else:
             player_class.throw_range = range(-4, 6-player_class.throws_left)
 
+def closest_one(target_pos, candidate_list):
+    '''from a list of candidates, select one that is closest to
+       the position of the target and return its position'''
+    distance_list = []
+    for candidate in candidate_list:
+        distance_list.append((least_distance(candidate_list, target_pos), candidate))
+    distance_list = sorted(distance_list)
+    return distance_list[0][1]
+
+""" -------------------- PLAYER ACTION ---------------------"""
+# Throw Action, reduce current throw number
+def action_throw(symbol_type, point):
+    return ("THROW",symbol_type, point)
+# Slide Action
+def action_slide(start, end):
+    return ("SLIDE",start, end)
+# Swing Action
+def action_swing(start, end):
+    return ("SWING",start, end)
+
 
 def add_action_to_play_dict(player_class, player, action):
     if action[0] in "THROW":
