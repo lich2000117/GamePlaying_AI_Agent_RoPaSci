@@ -4,7 +4,6 @@
 #                        "block":[]}                     
 #                        "R":[(1,3),(3,4)]   saying Rock1 at position (1,3) and Rock2 at (3,4)
 from IG2.cognitive_ability import analyse_current_situation
-from IG2.brain import defensive_decision_making
 
 
 def defensive_action(self):
@@ -14,7 +13,7 @@ def defensive_action(self):
     '''
 
     situation = []
-    situation = defensive_decision_making(self)
+    situation = analyse_current_situation(self)
     return situation
 
 def open_game_stragety(self):
