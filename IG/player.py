@@ -1,6 +1,6 @@
-from IG.util import *
-#from IG.random_algorithms import *
-from IG.greedy_strategy import *
+from GreedyEnemy.util import *
+#from GreedyEnemy.random_algorithms import *
+from GreedyEnemy.greedy_strategy import *
 
 class Player:
     
@@ -16,7 +16,7 @@ class Player:
         #Config
         self.REFINED_THROW = "defense"  # empty string: random throw symbols, "attack": throw enemy most symbols' counter, "defense": throw player's least symbol for supply
         self.BFS_TUNE_MODE = True  # If using refined algorithms (get nearest nodes for BFS)
-        self.BREAK_TIE = True  # check if will break the tie when reaching same game state three times
+        self.BREAK_TIE = False  # check if will break the tie when reaching same game state three times
         
         
         self.game_round = 1
@@ -82,7 +82,7 @@ class Player:
 
         #Check Repeated Game State:
         cur_game_state = (get_current_player_nodes_count(self, "player"), get_current_player_nodes_count(self, "opponent"))
-        if (cur_game_state == prev_game_state):
+        if cur_game_state == prev_game_state:
             self.same_state_count += 1
         else:
             self.same_state_count = 0

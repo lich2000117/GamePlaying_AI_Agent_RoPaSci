@@ -103,6 +103,8 @@ def get_six_adj_nodes(cur_point):
 # returns a list of children's location and visited nodes
 def get_children(type, visited, play_dict, cur_point, end, next_board_dict):
     children_list = []
+    cur_X = cur_point[0]
+    cur_Y = cur_point[1]
 
     priority_list = []
     next_point_list = get_six_adj_nodes(cur_point)   #get six adj nodes
@@ -171,9 +173,9 @@ def BFS_Search(type, visited, start, end, play_dict, bfs_queue, next_board_dict)
     return BFS_Search(type, visited, bfs_queue[0][0], end, play_dict, bfs_queue, next_board_dict)
 
 
-#function that returns next step by using DFS,
+#function that returns next step by using BFS,
 # implementing reverse path finding
-def get_path_by_dfs(type, start, end, play_dict, next_board_dict):
+def get_path_by_bfs(type, start, end, play_dict, next_board_dict):
     bfs_queue = [[list(start)]]
     visited = {}
     out_path = [end]
@@ -205,7 +207,7 @@ def get_path_by_dfs(type, start, end, play_dict, next_board_dict):
 def Search_Path(type, start, end, play_dict, next_board_dict):
     path = []
     #BFS:
-    path = get_path_by_dfs(type, start, end, play_dict, next_board_dict)
+    path = get_path_by_bfs(type, start, end, play_dict, next_board_dict)
     if path:
         return path
     else:

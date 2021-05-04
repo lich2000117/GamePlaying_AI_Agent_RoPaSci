@@ -1,5 +1,5 @@
 import random
-from IG.util import *
+from GreedyEnemy.util import *
 
 # random throw a symbol at random location
 def random_throw(player_class):

@@ -1,1 +1,1 @@
-from IG.player import Player
+from GreedyEnemy.player import Player
