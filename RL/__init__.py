@@ -1,0 +1,1 @@
+from IG2.player import Player

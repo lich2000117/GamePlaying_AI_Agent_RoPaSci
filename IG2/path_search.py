@@ -34,9 +34,9 @@ def get_children(type, visited, play_dict, cur_point, end):
 
     #Add swing nodes:
     #for point in next_point_list:
-    upper_token_list = [item for sublist in play_dict["upper"].values() for item in sublist]
+    player_token_list = [item for sublist in play_dict["player"].values() for item in sublist]
     for point in next_point_list:
-        if point in upper_token_list:
+        if point in player_token_list:
             swing_node = []
             for node in get_six_adj_nodes(point):
                 if least_distance(cur_point, node) == 2:
@@ -59,7 +59,7 @@ def get_children(type, visited, play_dict, cur_point, end):
     #visited list for reverse finding BFS's path. {(parent):[(child),(child),(child)], ....} 
     for point in next_point_list:
         if ((point not in visited_list) 
-                    and (is_point_valid(play_dict, point)) 
+                    and (is_point_valid(point)) 
                         and (check_counter_node(play_dict, type, point))):
             children_list.append(list(point))
             if tuple(cur_point) in visited.keys():
@@ -95,22 +95,22 @@ def get_path_by_dfs(type, start, end, play_dict):
 # cur_point: (x,y)
 # tar_point: (x,y)
 def check_counter_node(next_board_dict, type, tar_point):
-    R_node_list = find_player_symbols(next_board_dict, "player", "R") + find_player_symbols(next_board_dict, "opponent", "R")
-    P_node_list = find_player_symbols(next_board_dict, "player", "P") + find_player_symbols(next_board_dict, "opponent", "P")
-    S_node_list = find_player_symbols(next_board_dict, "player", "S") + find_player_symbols(next_board_dict, "opponent", "S")
-    upper_R_list = find_player_symbols(next_board_dict, "player", "R")
-    upper_P_list = find_player_symbols(next_board_dict, "player", "P")
-    upper_S_list = find_player_symbols(next_board_dict, "player", "S")
+    R_node_list = find_player_symbols(next_board_dict, "player", "r") + find_player_symbols(next_board_dict, "opponent", "r")
+    P_node_list = find_player_symbols(next_board_dict, "player", "p") + find_player_symbols(next_board_dict, "opponent", "p")
+    S_node_list = find_player_symbols(next_board_dict, "player", "s") + find_player_symbols(next_board_dict, "opponent", "s")
+    upper_R_list = find_player_symbols(next_board_dict, "player", "r")
+    upper_P_list = find_player_symbols(next_board_dict, "player", "p")
+    upper_S_list = find_player_symbols(next_board_dict, "player", "s")
     # Rock eaten by Paper or eliminate friendly Sissors
-    if type == "R":
+    if type == "r":
         if (tar_point in P_node_list) or (tar_point in upper_S_list):
             return False
     # Paper eaten by Scissor or eliminate friendly Rocks
-    if type == "P":
+    if type == "p":
         if (tar_point in S_node_list) or (tar_point in upper_R_list):
             return False
     # Scissor eaten by Rock or eliminate friendly Paper
-    if type == "S":
+    if type == "s":
         if (tar_point in R_node_list) or (tar_point in upper_P_list):
             return False
     return True
@@ -120,7 +120,7 @@ def check_counter_node(next_board_dict, type, tar_point):
 # params:
 #           cur_point = (x_coordinate, y_coordinate)
 # check if a point is valid(not off the map)
-def is_point_valid(next_board_dict, cur_point):
+def is_point_valid(cur_point):
     if abs(cur_point[0]) > 4 or abs(cur_point[1]) > 4:
         return False
     if abs(cur_point[0] + cur_point[1]) > 4:

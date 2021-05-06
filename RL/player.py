@@ -1,7 +1,4 @@
-from IG2.util import Init_throw_range, add_action_to_play_dict, eliminate_and_update_board
-from IG2.defensive import open_game_stragety
-from IG2.aggressive import aggressive_action
-from IG2.brain import defensive_decision_making
+from RL.util import Init_throw_range, add_action_to_play_dict, eliminate_and_update_board
 
 class Player:
     
@@ -15,28 +12,11 @@ class Player:
         as Lower).
         """
 
-        # used to determine the strategy for several turns
-        self.mod = "defensive"  
-        # a flag used to determine the next immediate move
-        self.status = "defensive"  #can be "awaiting prey", "check kill", "kill confirm"
-        self.IsAdvantageous = "draw"
-
         self.game_round = 1
         self.throws_left = 9   # reduced by 1 after each throw in util/add_action_board function
         self.enemy_throws_left = 9
         self.side = player
 
-        # Determine throw range according to different locations
-        self.throw_range = tuple()
-        self.enemy_throws_range = tuple()
-        Init_throw_range(self)
-
-        # list used to record the history of enemy movement
-        self.enemy_move_history = []
-        self.log_history = []  # used to output for further analysis after the game
-        self.history_limit = 5
-        self.hunt_area = []  # used to mark the area where I eliminate opponnet's token
-        
         # play_dict is used to store symbols for each player
         self.play_dict = {"player":{"r":[], "p":[], "s":[]},
                         "opponent":{"r":[], "p":[], "s":[]},
@@ -53,19 +33,8 @@ class Player:
         of the game, select an action to play this turn.
         """
         # hard code the first three rounds to lay out my defensive 
-       
-
         if self.game_round <= 3:
-            return open_game_stragety(self)
-        else:      
-            isContinue = input("Do you want to continue the game? Y/N \n")
-            if isContinue == 'N' or isContinue == 'n':
-                print(isContinue, isContinue == 'N' or isContinue == 'n')
-            else:
-                if self.mod == "defensive":
-                    return defensive_decision_making(self)
-                if self.mod == "aggressive":
-                    return defensive_decision_making(self) 
+            open_game_stragety(self)
 
         
     
@@ -81,11 +50,6 @@ class Player:
         # do not calculate elimination now, just update symbols to play_dict
         # add each player's action to board for the reason of synchronising play.
         # if throw, also reduce throws left by 1
-        if len(self.enemy_move_history) < self.history_limit:
-            self.enemy_move_history.insert(0, opponent_action)
-        else:
-            self.enemy_move_history.pop(4)
-            self.enemy_move_history.insert(0, opponent_action)
 
         add_action_to_play_dict(self, "opponent", opponent_action)
         add_action_to_play_dict(self, "player", player_action)
@@ -95,3 +59,21 @@ class Player:
         # after token actions, check if eliminate other tokens by following function
         eliminate_and_update_board(self,self.target_dict)
         self.game_round += 1
+
+
+def open_game_stragety(self):
+    if self.game_round == 1: 
+        if self.side == "upper":
+            return ('THROW', 'r', (4, -4))
+        if self.side == "lower":
+            return ("THROW", "r", (-4, 2))
+    if self.game_round == 2: 
+        if self.side == "upper":
+            return ("THROW", "p", (3, -2))
+        if self.side == "lower":
+            return ("THROW", "p", (-3, 2))
+    if self.game_round == 3: 
+        if self.side == "upper":
+            return ("THROW", "s", (4, -1))
+        if self.side == "lower":
+            return ("THROW", "s", (-3, 1))

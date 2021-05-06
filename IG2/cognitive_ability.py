@@ -8,7 +8,8 @@
 # self.target_dict = {"r":"s", "s":"p", "p":"r"}
 
 from IG2.util import least_distance, get_symbol_by_location
-from IG2.path_search import get_six_adj_nodes, Search_Path
+from IG2.path_search import get_six_adj_nodes, Search_Path, is_point_valid, check_counter_node
+
 
 def analyse_current_situation(self):
     '''Do various kinds of analysis of the situation on the board and send the recognized info to the 
@@ -20,7 +21,7 @@ def analyse_current_situation(self):
         len(self.play_dict["opponent"]["r"] + self.play_dict["opponent"]["p"] + \
             self.play_dict["opponent"]["s"])]
     threat_list = hostile_tokens(self)
-    history_analysis = analyse_current_situation(self)
+    history_analysis = analyse_history(self)
     return [num_tokens, threat_list, history_analysis]
 
 def analyse_history(self):
@@ -43,15 +44,54 @@ def hostile_tokens(self):
     # 
     hostile_tokens = []  
     for enemy, my_token in self.target_dict.items():
-        # a list of 
         my_token_pos = self.play_dict["player"][my_token]
         enemy_token_pos = self.play_dict["opponent"][enemy]
         if my_token_pos and enemy_token_pos:
             for token in my_token_pos:
                 for enemy_token in enemy_token_pos:
                     hostile_tokens.append((enemy, enemy_token, least_distance(enemy_token, token), token))
+
     hostile_tokens = sorted(hostile_tokens, key=lambda x: x[2])
     return hostile_tokens
+
+
+def get_all_valid_throw(self):
+    """This function is used to generate all the possible throw"""
+    have_thrown = 9 - self.throws_left
+    throw_list = []
+    if self.side == "upper" and self.throws_left > 0:
+        for row in range(4, 3 - have_thrown, -1):
+            for col in range(-4, 5):
+                if abs(row + col) <= 4:
+                    throw_list.append((row, col))
+    elif self.side == "lower" and self.throws_left > 0:
+        for row in range(-4, -3 + have_thrown):
+            for col in range(-4, 5):
+                if abs(row + col) <= 4:
+                    throw_list.append((row, col))
+    return throw_list
+
+def get_all_valid_move(move_token, self):
+    # move token should be in the format (pos, type)
+    adj_nodes = get_six_adj_nodes(move_token[0])
+    player_token_list = [item for sublist in self.play_dict["player"].values() for item in sublist]
+    valid_move_list = []
+    move_list = []
+    move_list += adj_nodes
+    for node in adj_nodes:
+        if node in player_token_list:
+            swing_nodes = []
+            for swing_node in get_six_adj_nodes(node):
+                if least_distance(swing_node, move_token[0]) == 2:
+                    swing_nodes.append(swing_node)
+            move_list += swing_nodes
+    
+    # check all the move node whether they are off the grid or will be eaten or eat friendly
+    for move in move_list:
+        if is_point_valid(move) and check_counter_node(self.play_dict, move_token[1], move):
+            valid_move_list.append(move)
+    return valid_move_list
+
 
 def isSupportOnTime(self, token_under_threat_pos, counter_pos, hostile_token_pos):
     intercept_points = get_six_adj_nodes(token_under_threat_pos)
