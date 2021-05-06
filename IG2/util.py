@@ -63,7 +63,7 @@ def action_swing(start, end):
 def move_action(start, end):
     if least_distance(start, end) == 1:
         return action_slide(start, end)
-    else:
+    elif least_distance(start, end) == 2:
         return action_swing(start, end)
 
 

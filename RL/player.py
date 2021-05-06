@@ -1,4 +1,5 @@
 from RL.util import Init_throw_range, add_action_to_play_dict, eliminate_and_update_board
+from RL.action import get_all_valid_action
 
 class Player:
     
@@ -34,7 +35,15 @@ class Player:
         """
         # hard code the first three rounds to lay out my defensive 
         if self.game_round <= 3:
-            open_game_stragety(self)
+            return open_game_stragety(self)
+        else:
+            print("Enter!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            current_state = (self.play_dict, self.throws_left, self.enemy_throws_left, self.side)
+            action_list = get_all_valid_action(current_state)
+            for action in action_list:
+                print(action)
+            return 0
+            
 
         
     

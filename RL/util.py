@@ -102,6 +102,21 @@ def find_player_symbols(play_dict, player_side, symbol_type):
     else:
         return []
 
+def get_six_adj_nodes(cur_point):
+    cur_X = cur_point[0]
+    cur_Y = cur_point[1]
+    six_nodes = [(cur_X+1, cur_Y-1), (cur_X+1, cur_Y), 
+                        (cur_X, cur_Y+1), (cur_X-1, cur_Y+1), 
+                        (cur_X-1, cur_Y), (cur_X, cur_Y-1)]
+    return six_nodes
+
+def is_point_valid(cur_point):
+    if abs(cur_point[0]) > 4 or abs(cur_point[1]) > 4:
+        return False
+    if abs(cur_point[0] + cur_point[1]) > 4:
+        return False
+    else:
+        return True
 
 def get_symbol_by_location(whichPlayer, play_dict, point):
     out = ""
@@ -133,6 +148,7 @@ def eliminate_and_update_board(play_class,target_dict):
                 remove_all_type_symbols_at_location(play_class,"r",position)
                 remove_all_type_symbols_at_location(play_class,"p",position)
             remove_all_type_symbols_at_location(play_class, target_symbol, position)
+
 
 # Remove all symbols of that type at that location
 def remove_all_type_symbols_at_location(player_class, removetype, location):

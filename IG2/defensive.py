@@ -40,6 +40,7 @@ def inductive_flee(token_under_threat_pos, counter_pos, hostile_token_pos, self)
     path = Search_Path(token_under_threat_type, token_under_threat_pos, optimal_node, self.play_dict)
     next_move = path[1]
     return move_action(token_under_threat_pos, next_move)
+
     
 
 
@@ -47,13 +48,20 @@ def inductive_flee(token_under_threat_pos, counter_pos, hostile_token_pos, self)
 def awiting_target(hostile_token, token_under_threat_pos, counter_pos, self):
     print("_______________________Awiting target__________________________")
     # hostile_token = (hostile_token_pos, hostile_token_type)
-    if least_distance(hostile_token[0], token_under_threat_pos) == 2:
+    if least_distance(hostile_token[0], token_under_threat_pos) == 1:
+        token_type = self.target_dict[hostile_token[1]]
+        valid_move_list = get_all_valid_move((token_under_threat_pos, token_type), self)
+        next_move = sorted(valid_move_list, key=lambda x: least_distance(x,token_under_threat_pos), reverse=True)[0]
+        return move_action(token_under_threat_pos, next_move)
+    elif least_distance(hostile_token[0], token_under_threat_pos) == 2:
         self.hunt_area = contact_grid_finding(hostile_token, token_under_threat_pos, self)
         # if there are only possible contacting grid, eat the incoming token with counter
-        if len(self.hunt_area) == 1:
+        if len(self.hunt_area) == 1 and self.hunt_area[0] != counter_pos:
             return move_action(counter_pos, self.hunt_area[0])
         # if there are two possible chosen contacting grid, randomly choose one
         # and record the preference of the opponent
+        elif len(self.hunt_area) == 1 and self.hunt_area[0] == counter_pos:
+            return move_the_third_token(hostile_token[1], self)
         else:
             die_num = random.rand()
             if die_num <= 0.5:
