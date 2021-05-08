@@ -188,15 +188,15 @@ def get_throw_range(state):
     """This function is used to get the throw range of both player, it returns a tuple
         which is (player_throw_range, opponent_throw_range)
     """
-    have_thrown = 9 - state[1]
-    enemy_have_thrown = 9 - state[2]
+    have_thrown = 9 - state.throw_left
+    enemy_have_thrown = 9 - state.enemy_throw_left
     player_throw_range = range()
     enemy_throw_range = range()
-    if state[3] == "upper":
+    if state.side == "upper":
         player_throw_range = range(4, 3 - have_thrown, -1)
         enemy_throw_range = range(-4, -3 + enemy_have_thrown, +1) 
         return (player_throw_range, enemy_throw_range) 
-    elif state[3] == "lower":
+    elif state.side == "lower":
         player_throw_range = range(-4, -3 + have_thrown, +1)
         enemy_throw_range = range(4, 3 - enemy_have_thrown, -1)
         return (player_throw_range, enemy_throw_range) 
@@ -209,7 +209,6 @@ def add_action_to_play_dict(state, player, action):
     This function copy the previous state and add action on the new board and return the new
     state 
     """
-    # state = (play_dict, player's throw left, opponnet's throw left, player's side)
     player_throw_left = state[1]
     enemy_throw_left = state[2]
     new_play_dict = state[0]

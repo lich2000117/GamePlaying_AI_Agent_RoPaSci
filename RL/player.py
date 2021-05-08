@@ -1,6 +1,7 @@
 from RL.util import Init_throw_range, add_action_to_play_dict, eliminate_and_update_board
 from RL.action import get_all_valid_action
 from RL.action_evaluation import action_evaluation
+from RL.state import State
 
 class Player:
     
@@ -43,7 +44,7 @@ class Player:
         if self.game_round <= 3:
             return open_game_stragety(self)
         else:
-            current_state = (self.play_dict, self.throws_left, self.enemy_throws_left, self.side)
+            current_state = State(self.play_dict, self.throws_left, self.enemy_throws_left, self.side)
             action_list = get_all_valid_action(current_state)
             action_evaluation_list = []
             for action in action_list:
