@@ -1,1 +1,1 @@
-from IG2.player import Player
+from RL.player import Player

@@ -1,7 +1,18 @@
+import numpy as np
 def state_evaluation(state):
     # state is in the form of (play_dict, player's throw left, opponnet's throw left, player's side)
-    feature_list = []
-    feature_list.append(board_count(state))
+    feature_array = np.arrar([])
+    np.append(feature_array, board_count(state))
+    np.append(feature_array, hostile_token_in_throw_range(state))
+    np.append(feature_array, token_in_enemy_throw_range(state))
+
+    w = [10, 5, -5]
+    W = np.array([])
+    for i in range(0, len(feature_array)):
+        np.append(W, w[i])
+    
+    return feature_array.dot(W)
+
     
     
 

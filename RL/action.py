@@ -16,10 +16,11 @@ def get_all_valid_action(state):
 
     # get all the throw action
     throw_list = get_all_valid_throw(state)
-    for throw in throw_list:
-        for type in ['r', 'p', 's']:
-            throw_action = action_throw(type, throw)
-            all_valid_action.append(throw_action)
+    if throw_list:
+        for throw in throw_list:
+            for type in ['r', 'p', 's']:
+                throw_action = action_throw(type, throw)
+                all_valid_action.append(throw_action)
 
     return all_valid_action
 
@@ -28,6 +29,7 @@ def get_all_valid_throw(state):
     """This function is used to generate all the possible throw"""
     have_thrown = 9 - state[1]
     throw_list = []
+    # if we dont have throws left, return an empty list
     if state[3] == "upper" and state[1] > 0:
         for row in range(4, 3 - have_thrown, -1):
             for col in range(-4, 5):
@@ -39,8 +41,7 @@ def get_all_valid_throw(state):
                 if abs(row + col) <= 4:
                     throw_list.append((row, col))
     else:
-        exit()
-    return throw_list
+        return []
 
 def get_all_valid_move(state):
 
@@ -59,10 +60,10 @@ def get_all_valid_move(state):
             move_list += adj_nodes
 
             # check whether each token can swing
+            swing_nodes = set()
             for node in adj_nodes:
                 player_token_list = [item for sublist in state[0]["player"].values() for item in sublist]       
                 if node in player_token_list:
-                    swing_nodes = set()
                     for swing_node in get_six_adj_nodes(node):
                         if least_distance(swing_node, move_token[0]) == 2:
                             swing_nodes.add(swing_node)

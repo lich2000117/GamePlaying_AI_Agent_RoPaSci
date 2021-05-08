@@ -1,5 +1,6 @@
 from RL.util import Init_throw_range, add_action_to_play_dict, eliminate_and_update_board
 from RL.action import get_all_valid_action
+from RL.action_evaluation import action_evaluation
 
 class Player:
     
@@ -17,6 +18,11 @@ class Player:
         self.throws_left = 9   # reduced by 1 after each throw in util/add_action_board function
         self.enemy_throws_left = 9
         self.side = player
+
+        # Determine throw range according to different locations
+        self.throw_range = tuple()
+        self.enemy_throws_range = tuple()
+        Init_throw_range(self)
 
         # play_dict is used to store symbols for each player
         self.play_dict = {"player":{"r":[], "p":[], "s":[]},
@@ -37,12 +43,15 @@ class Player:
         if self.game_round <= 3:
             return open_game_stragety(self)
         else:
-            print("Enter!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             current_state = (self.play_dict, self.throws_left, self.enemy_throws_left, self.side)
             action_list = get_all_valid_action(current_state)
+            action_evaluation_list = []
             for action in action_list:
-                print(action)
-            return 0
+                value = action_evaluation(current_state, action)
+                action_evaluation_list.append( (value, action) )
+            
+            action_evaluation = sorted(action_evaluation_list, reverse=True)
+            return action_evaluation_list[0][1]
             
 
         
