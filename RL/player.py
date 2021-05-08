@@ -2,6 +2,7 @@ from RL.util import Init_throw_range, add_action_to_play_dict, eliminate_and_upd
 from RL.action import get_all_valid_action
 from RL.action_evaluation import action_evaluation
 from RL.state import State
+from copy import copy
 
 class Player:
     
@@ -44,14 +45,19 @@ class Player:
         if self.game_round <= 3:
             return open_game_stragety(self)
         else:
-            current_state = State(self.play_dict, self.throws_left, self.enemy_throws_left, self.side)
+            current_state = State(copy(self.play_dict), copy(self.throws_left),
+                                 copy(self.enemy_throws_left), copy(self.side))
             action_list = get_all_valid_action(current_state)
             action_evaluation_list = []
+            value = 0
             for action in action_list:
+                # print(action)
                 value = action_evaluation(current_state, action)
                 action_evaluation_list.append( (value, action) )
             
-            action_evaluation = sorted(action_evaluation_list, reverse=True)
+            action_evaluation_list = sorted(action_evaluation_list, reverse=True)
+            print(action_evaluation_list[0])
+            input("Press Enter to continue\n")
             return action_evaluation_list[0][1]
             
 

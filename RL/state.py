@@ -1,7 +1,7 @@
 class State:
     
-    def __init__(self, play_dict, throw_left, enemy_throw_left, side):
+    def __init__(self, play_dict, throws_left, enemy_throws_left, side):
         self.play_dict = play_dict
-        self.throw_left = throw_left
-        self.enemy_throw_left = enemy_throw_left
+        self.throws_left = throws_left
+        self.enemy_throws_left = enemy_throws_left
         self.side = side
