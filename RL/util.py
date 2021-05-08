@@ -1,3 +1,20 @@
+
+
+
+
+
+
+# return number of nodes count in player_class
+# return:
+#       {"s": 4, "r":2, "p":1}      #4 Scissors, 2 rock, 1 paper
+def get_current_player_nodes_count(player_class, player_side):
+    count_dict = {}
+    count_dict["r"] = len(player_class.play_dict[player_side]["r"])
+    count_dict["p"] = len(player_class.play_dict[player_side]["p"])
+    count_dict["s"] = len(player_class.play_dict[player_side]["s"])
+    return count_dict
+
+
 # this function returns how many steps for a symbol to move the position of 
 # another symbol, it takes the positions of two symbols as input
 # from position1 to position2

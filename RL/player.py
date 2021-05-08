@@ -2,6 +2,7 @@ from RL.util import Init_throw_range, add_action_to_play_dict, eliminate_and_upd
 from RL.action import get_all_valid_action
 from RL.action_evaluation import action_evaluation
 from RL.state import State
+from RL.random_algorithms import *
 from copy import copy
 
 class Player:
@@ -15,6 +16,8 @@ class Player:
         play as Upper), or the string "lower" (if the instance will play
         as Lower).
         """
+        self.BREAK_TIE = True   # if algorithm break tie automatically
+        self.REFINED_THROW = True   # if using advanced random throw strategy
 
         self.game_round = 1
         self.throws_left = 9   # reduced by 1 after each throw in util/add_action_board function
@@ -25,6 +28,7 @@ class Player:
         self.throw_range = tuple()
         self.enemy_throws_range = tuple()
         Init_throw_range(self)
+        self.same_state_count = 0  # count of same game state, if reach 3, break the tie to avoid draw
 
         # play_dict is used to store symbols for each player
         self.play_dict = {"player":{"r":[], "p":[], "s":[]},
@@ -41,6 +45,21 @@ class Player:
         Called at the beginning of each turn. Based on the current state
         of the game, select an action to play this turn.
         """
+        
+        # if reached same game state three times, break the tie
+        if (self.same_state_count >= 3) and (self.BREAK_TIE):
+            # break tie by random throw
+            if (self.throws_left>0):
+                print("\n^^^^^^^^^^^^^^BREAKING TIE, THROW^^^^^^^^^^^^^^^\n")
+                if (self.REFINED_THROW):
+                    return refined_random_throw(self, self.REFINED_THROW)
+                else:
+                    return random_throw(self)
+            else:
+                # break tie by random move
+                return random_action(self)
+
+
         # hard code the first three rounds to lay out my defensive 
         if self.game_round <= 3:
             return open_game_stragety(self)
@@ -57,7 +76,7 @@ class Player:
             
             action_evaluation_list = sorted(action_evaluation_list, reverse=True)
             print(action_evaluation_list[0])
-            input("Press Enter to continue\n")
+            #input("Press Enter to continue\n")
             return action_evaluation_list[0][1]
             
 
@@ -72,6 +91,7 @@ class Player:
         and player_action is this instance's latest chosen action.
         """
         #Check Repeated Game State, get previous game state:
+        prev_game_state = (get_current_player_nodes_count(self, "player"), get_current_player_nodes_count(self, "opponent"))
         # do not calculate elimination now, just update symbols to play_dict
         # add each player's action to board for the reason of synchronising play.
         # if throw, also reduce throws left by 1
@@ -84,6 +104,13 @@ class Player:
         # after token actions, check if eliminate other tokens by following function
         eliminate_and_update_board(self,self.target_dict)
         self.game_round += 1
+
+        #Check Repeated Game State:
+        cur_game_state = (get_current_player_nodes_count(self, "player"), get_current_player_nodes_count(self, "opponent"))
+        if cur_game_state == prev_game_state:
+            self.same_state_count += 1
+        else:
+            self.same_state_count = 0
 
 
 def open_game_stragety(self):
