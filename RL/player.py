@@ -71,7 +71,7 @@ class Player:
             value = 0
             for action in action_list:
                 # print(action)
-                value = action_evaluation(self,"player", current_state, action)
+                value = action_evaluation("player", current_state, action)
                 action_evaluation_list.append( (value, action) )
             
             action_evaluation_list = sorted(action_evaluation_list, reverse=True)

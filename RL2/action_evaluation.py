@@ -21,7 +21,7 @@ def action_evaluation(whichPlayer,state, action):
     reward_list = []
     ################ chasing action reward parameter ###################
     CHASING_REWARD = 5
-    ELIMINATION_REWARD = 15
+    ELIMINATION_REWARD = 30
 
     ################ fleeing action reward parameter ###################
     FLEE_REWARD = 3
@@ -32,12 +32,12 @@ def action_evaluation(whichPlayer,state, action):
     APPROACHING_REWARD = 3
 
     ################ avoid danger action reward parameter ###################
-    AVOID_DANGER_REWARD = 10
+    AVOID_DANGER_REWARD = 2
 
     ################ throw-elimination action reward parameter ###################
-    THROW_ELIMINATION_REWARD = 6
+    THROW_ELIMINATION_REWARD = 15
     # THROW_DEFENSE_REWARD = 3
-    THROW_ATTACK_REWARD = 2
+    THROW_ATTACK_REWARD = 10
 
     target_dict = {'r':'s', 'p':'r', 's':'p'}
     # evaluation of action

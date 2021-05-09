@@ -1,13 +1,15 @@
 from RL.util import *
 from RL.action import get_all_valid_action
-from RL.action_evaluation import action_evaluation
+from RL2.action_evaluation import action_evaluation
 from RL.state import State
 from RL.random_algorithms import *
 from copy import copy
+import random
 
 import pandas as pd
 import matplotlib.pyplot as plt
 import collections
+from collections import defaultdict as dd
 
 class Player:
     
@@ -20,7 +22,8 @@ class Player:
         play as Upper), or the string "lower" (if the instance will play
         as Lower).
         """
-        self.BREAK_TIE = False   # if algorithm break tie automatically
+        self.ANALYSIS_MODE = True
+        self.AVOID_DRAW = True   # if algorithm break tie automatically
         self.REFINED_THROW = True   # if using advanced random throw strategy
 
         self.game_round = 1
@@ -52,7 +55,8 @@ class Player:
 
         # Store history to Check Draw Game
         self.history = collections.Counter({self._snap(): 1})
-
+        self.cur_snap_used_action_index = dd(int)  # a dictionary that stores used action for every snap to avoid those steps in the future
+            # {state1: 0,1,2}   at state1 used action at index 0, 1 and 2, so next time starting from 3
 
 
 
@@ -66,41 +70,22 @@ class Player:
         if self.game_round <= 3:
             return open_game_stragety(self)
         else:
-            current_state = State(copy(self.play_dict), copy(self.throws_left),
-                                 copy(self.enemy_throws_left), copy(self.side))
-            action_list = get_all_valid_action("player", current_state)
-            action_evaluation_list = []
-            value = 0
-            for action in action_list:
-                # print(action)
-                value = action_evaluation("player", current_state, action)
-                action_evaluation_list.append( (value, action) )
-            
-            action_evaluation_list = sorted(action_evaluation_list, reverse=True)
-            print(action_evaluation_list[0])
-            
+            # Get sorted Scored Action Evaluation List for us to choose
+            action_evaluation_list = self.getScoredActionList("player")
 
-            # Get Action Evaluation List for Enemy
-            self.opponent_action_evaluation_list = []
-            opponent_current_state = State(copy(self.play_dict), copy(self.enemy_throws_left),
-                                 copy(self.throws_left), copy(self.enemy_side))
-            opponent_action_list = get_all_valid_action("opponent", opponent_current_state)
-            
-            opponent_value = 0
-            for opponent_action in opponent_action_list:
-                # print(action)
-                opponent_value = action_evaluation("opponent", opponent_current_state, opponent_action)
-                self.opponent_action_evaluation_list.append( (opponent_value, opponent_action) )
-            
-            self.opponent_action_evaluation_list = sorted(self.opponent_action_evaluation_list, reverse=True)
+            # Get sorted Action Evaluation List for Enemy's choice
+            self.opponent_action_evaluation_list = self.getScoredActionList("opponent")
 
-
-            # if reach same state as before, take another action
+            # Avoid Draw Situation, take another action without using already used ones checked by default dict
             cur_snap = self._snap()
-            if (self.history[cur_snap] >= 2):
-                return action_evaluation_list[1][1]
+            if (self.history[cur_snap] >= 2 and self.AVOID_DRAW):
+                self.cur_snap_used_action_index[cur_snap] += 1
+                next_index = self.cur_snap_used_action_index[cur_snap]
+                next_index = random.randint(0,12)
+                if next_index<len(action_evaluation_list):
+                    return action_evaluation_list[next_index][1]
 
-
+            # return best action
             return action_evaluation_list[0][1]
             
 
@@ -115,10 +100,8 @@ class Player:
         and player_action is this instance's latest chosen action.
         """
 
-        #input("\n\nasd")
-
+        # count enemy's choices index based on our function
         i=0
-        
         for pair in self.opponent_action_evaluation_list:
             if pair[1] == opponent_action:
                 self.opponent_action_count_list.append(i)
@@ -129,13 +112,8 @@ class Player:
                 # print(i)
                 # print(pair)
                 break
-                #input("Press Enter to continue\n")
             i+=1
-        #self.opponent_action_evaluation_list.index(opponent_action)
-            #print(self.opponent_action_evaluation_list[0])
-
         
-
         
         # do not calculate elimination now, just update symbols to play_dict
         # add each player's action to board for the reason of synchronising play.
@@ -158,8 +136,8 @@ class Player:
 
         
 
-        #Plot
-        if self.throws_left==0 or self.enemy_throws_left==0:
+        #Analyse Enemy's choice based on our evaluation list 
+        if self.ANALYSIS_MODE:
             if self.opponent_action_count_list:
                 dist = pd.DataFrame(self.opponent_action_count_list,columns=["IndexOfEnemyAction"])
                 # dist.agg(['min', 'max', 'mean', 'std']).round(decimals=2)
@@ -192,7 +170,30 @@ class Player:
         )
 
 
-    
+
+    def getScoredActionList(self, whichPlayer):
+        """
+        Get Sorted List Based on Scoring Function,
+        Can Use to get Opponent's score list
+        """
+        if (whichPlayer == "player"):
+            current_state = State(copy(self.play_dict), copy(self.throws_left),
+                                copy(self.enemy_throws_left), copy(self.side))
+        else:
+            #Reverse throws_left and enemy_throws_left for enemy evaluation
+            current_state = State(copy(self.play_dict), copy(self.enemy_throws_left),
+                                copy(self.throws_left), copy(self.side))
+
+        action_list = get_all_valid_action(whichPlayer, current_state)
+        action_evaluation_list = []
+        value = 0
+        for action in action_list:
+            value = action_evaluation(whichPlayer, current_state, action)
+            action_evaluation_list.append( (value, action) )
+        action_evaluation_list = sorted(action_evaluation_list, reverse=True)
+        print(whichPlayer+"Evaluation List:")
+        print(action_evaluation_list[0])
+        return action_evaluation_list
 
 
 
