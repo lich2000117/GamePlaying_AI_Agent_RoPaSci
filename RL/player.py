@@ -129,7 +129,6 @@ class Player:
                     next_enemy_action = self.opponent_action_score_list[selected_score][selected_index][1]
                 else:
                     next_enemy_action = self.opponent_action_score_list[0][0][1]
-                next_enemy_action = self.opponent_action_score_list[0][0][1]
 
             
             # Get sorted Scored Action Evaluation List for us to choose
@@ -202,7 +201,7 @@ class Player:
                     writer.writerow(update_w)
 
 
-        input("\nPress enter to continue! ")
+        #input("\nPress enter to continue! ")
 
         # Take a snap of current game state and store it
         cur_snap = self._snap()

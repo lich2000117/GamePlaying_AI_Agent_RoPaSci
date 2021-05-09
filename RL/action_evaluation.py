@@ -11,7 +11,7 @@ def action_evaluation(whichPlayer,state, action):
 
     AGGRESIVE_WEIGHT = 1
     DEFENSIVE_WEIGHT = 1
-    PUNISHMENT_WEIGHT = 1
+    PUNISHMENT_WEIGHT = 1.2
 
 
     
@@ -23,7 +23,7 @@ def action_evaluation(whichPlayer,state, action):
     reward_list = []
     ################ chasing action reward parameter ###################
     CHASING_REWARD = 5
-    ELIMINATION_REWARD = 10
+    ELIMINATION_REWARD = 15
 
     ################ fleeing action reward parameter ###################
     FLEE_REWARD = 5
