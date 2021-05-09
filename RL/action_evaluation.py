@@ -3,7 +3,15 @@ from RL.state_evaluation import state_evaluation
 from copy import deepcopy
 from RL.state import State
 
-def action_evaluation(state, action):
+def action_evaluation(whichPlayer,state, action):
+    # Check if the evaluation is used on which side
+    if whichPlayer == "player":
+        ourPlayer = "player"
+        opponent = "opponent"
+    else:
+        ourPlayer = "opponent"
+        opponent = "player"
+
     # state = (play_dict, player's throw left, opponnet's throw left, player's side)
     # action = ("SLIDE",start, end) or ("SWING",start, end) or ("THROW",symbol_type, point)
     """this function returns a score that equals
@@ -13,7 +21,7 @@ def action_evaluation(state, action):
     reward_list = []
     ################ chasing action reward parameter ###################
     CHASING_REWARD = 5
-    ELIMINATION_REWARD = 10
+    ELIMINATION_REWARD = 15
 
     ################ fleeing action reward parameter ###################
     FLEE_REWARD = 3
@@ -27,9 +35,9 @@ def action_evaluation(state, action):
     AVOID_DANGER_REWARD = 2
 
     ################ throw-elimination action reward parameter ###################
-    THROW_ELIMINATION_REWARD = 10
+    THROW_ELIMINATION_REWARD = 6
     # THROW_DEFENSE_REWARD = 3
-    THROW_ATTACK_REWARD = 3
+    THROW_ATTACK_REWARD = 2
 
     target_dict = {'r':'s', 'p':'r', 's':'p'}
     # evaluation of action
@@ -39,8 +47,8 @@ def action_evaluation(state, action):
         # high possibility means there multiple hostile tokens within the throw range
         # or there are hostile tokens being chased
         throw_range = get_throw_range(state)[0]
-        enemy_token_list = [item for sublist in state.play_dict["opponent"].values() for item in sublist]
-        player_token_list = [item for sublist in state.play_dict["player"].values() for item in sublist]
+        enemy_token_list = [item for sublist in state.play_dict[opponent].values() for item in sublist]
+        player_token_list = [item for sublist in state.play_dict[ourPlayer].values() for item in sublist]
         count = 0
 
         # count how many enemy tokens are in danger
@@ -58,9 +66,9 @@ def action_evaluation(state, action):
         enemy_token_chased_list = []
 
         for enemy_token_pos in enemy_token_list:
-            enemy_token_type = get_symbol_by_location('opponent', state.play_dict, enemy_token_pos)
+            enemy_token_type = get_symbol_by_location(opponent, state.play_dict, enemy_token_pos)
             counter_token_type = target_dict[target_dict[enemy_token_type]]
-            counter_token_list = state.play_dict['player'][counter_token_type]
+            counter_token_list = state.play_dict[ourPlayer][counter_token_type]
             for counter_token_pos in counter_token_list:
                 if least_distance(counter_token_pos, enemy_token_pos) == 1:
                     if enemy_token_pos[0] not in throw_range:
@@ -78,13 +86,13 @@ def action_evaluation(state, action):
         # throw action1: throw on hostile token
         if action[2] in enemy_token_list:
             # reward possible direct throw elimination
-            if action[2] in state.play_dict["opponent"][target_type]:
+            if action[2] in state.play_dict[opponent][target_type]:
                 # if hostile token is already in danger, no need to use throw
                 if action[2] not in enemy_token_chased_list:
                     action_score += THROW_ELIMINATION_REWARD * (1 - 1/count)
                     reward_list.append("Throw elimination with high possibility +" + str(THROW_ELIMINATION_REWARD * (1 - 1/count)))
             # punish being eliminated
-            elif action[2] in state.play_dict["opponent"][counter_type]:
+            elif action[2] in state.play_dict[opponent][counter_type]:
                 action_score -= THROW_ELIMINATION_REWARD
                 reward_list.append("be eliminated throw punishment -" + str(THROW_ELIMINATION_REWARD))
     
@@ -92,11 +100,11 @@ def action_evaluation(state, action):
         # throw action2: throw on friendly token
         elif action[2] in player_token_list:
             # punish eliminating friendly token
-            if action[2] in state.play_dict["player"][target_type]:
+            if action[2] in state.play_dict[ourPlayer][target_type]:
                 action_score -= THROW_ELIMINATION_REWARD 
                 reward_list.append("throw: eliminating friendly token punishment -"+str(THROW_ELIMINATION_REWARD))
             # punish being eliminated
-            elif action[2] in state.play_dict["player"][counter_type]:
+            elif action[2] in state.play_dict[ourPlayer][counter_type]:
                 reward_list.append("throw: on counter friendly token punishment -"+str(THROW_ELIMINATION_REWARD))
                 action_score -= THROW_ELIMINATION_REWARD
 
@@ -112,7 +120,7 @@ def action_evaluation(state, action):
         counter = {}
         count = 0
         for type in ['r', 'p', 's']:
-            count = len(state.play_dict["player"][type]) - len(state.play_dict["opponent"][target_dict[type]])
+            count = len(state.play_dict[ourPlayer][type]) - len(state.play_dict[opponent][target_dict[type]])
             counter[type] = count
         
         value = -1 * (counter[action[1]]+1) * THROW_ATTACK_REWARD
@@ -122,7 +130,7 @@ def action_evaluation(state, action):
             
         
     elif action[0] == "SLIDE" or action[0] == "SWING":
-        token_type = get_symbol_by_location("player", state.play_dict, action[1])
+        token_type = get_symbol_by_location(ourPlayer, state.play_dict, action[1])
         # Next is a few of lists that store position information of 
         # hostile_token, friendly_token and target_token
         # for example, if my token is 'r'
@@ -130,21 +138,21 @@ def action_evaluation(state, action):
         # friendly token will be 's', because 's' counters 'p'
         # target token will be 's', because 'r' eliminates 's'
         hostile_token_type = target_dict[target_dict[token_type]]
-        hostile_token_list = state.play_dict["opponent"][hostile_token_type] # may need to consider draw situation
+        hostile_token_list = state.play_dict[opponent][hostile_token_type] # may need to consider draw situation
         friendly_token_type = target_dict[token_type]
-        friendly_tokens_list = state.play_dict['player'][target_dict[token_type]] 
+        friendly_tokens_list = state.play_dict[ourPlayer][target_dict[token_type]] 
         target_token_type = target_dict[token_type]
-        target_token_list = state.play_dict['opponent'][target_token_type]
+        target_token_list = state.play_dict[opponent][target_token_type]
 
         # reward action1: try to eliminate hostile token
-        if action[2] in state.play_dict["opponent"][target_token_type]:
+        if action[2] in state.play_dict[opponent][target_token_type]:
             reward_list.append("Chasing enemy token +" + str(CHASING_REWARD))
             action_score += CHASING_REWARD
         # punish action: eliminate friendly token or be eliminated by friendly token
-        elif action[2] in state.play_dict["player"][target_token_type]:
+        elif action[2] in state.play_dict[ourPlayer][target_token_type]:
             reward_list.append("punishment: eliminate friendly token -" + str(ELIMINATION_REWARD))
             action_score -= ELIMINATION_REWARD
-        elif action[2] in state.play_dict["player"][hostile_token_type]:
+        elif action[2] in state.play_dict[ourPlayer][hostile_token_type]:
             reward_list.append("Chasing enemy token -" + str(CHASING_REWARD))
             action_score -= ELIMINATION_REWARD
 
@@ -227,9 +235,8 @@ def action_evaluation(state, action):
         
 
     # create new state and update with the action for further evaluation
-    new_state = add_action_to_play_dict(state, "player", action)
+    new_state = add_action_to_play_dict(state, ourPlayer, action)
     eliminate_and_update_board(new_state, target_dict)
-
     # evaluation of post-action state
     state_score = state_evaluation(new_state)
 

@@ -5,6 +5,9 @@ from RL.state import State
 from RL.random_algorithms import *
 from copy import copy
 
+import pandas as pd
+import matplotlib.pyplot as plt
+
 class Player:
     
     
@@ -16,13 +19,17 @@ class Player:
         play as Upper), or the string "lower" (if the instance will play
         as Lower).
         """
-        self.BREAK_TIE = False   # if algorithm break tie automatically
+        self.BREAK_TIE = True   # if algorithm break tie automatically
         self.REFINED_THROW = True   # if using advanced random throw strategy
 
         self.game_round = 1
         self.throws_left = 9   # reduced by 1 after each throw in util/add_action_board function
         self.enemy_throws_left = 9
         self.side = player
+        if self.side == "upper":
+            self.enemy_side = "lower"
+        else:
+            self.enemy_side = "upper"
 
         # Determine throw range according to different locations
         self.throw_range = tuple()
@@ -39,6 +46,10 @@ class Player:
         # target_dict is used to store relationship between 2 symbols
         self.target_dict = {"r":"s", "s":"p", "p":"r"}
 
+        # Store Opponent's Action List
+        self.opponent_action_evaluation_list = []
+        self.opponent_action_count_list = []
+
 
     def action(self):
         """
@@ -46,18 +57,7 @@ class Player:
         of the game, select an action to play this turn.
         """
         
-        # if reached same game state three times, break the tie
-        if (self.same_state_count >= 3) and (self.BREAK_TIE):
-            # break tie by random throw
-            if (self.throws_left>0):
-                print("\n^^^^^^^^^^^^^^BREAKING TIE, THROW^^^^^^^^^^^^^^^\n")
-                if (self.REFINED_THROW):
-                    return refined_random_throw(self, self.REFINED_THROW)
-                else:
-                    return random_throw(self)
-            else:
-                # break tie by random move
-                return random_action(self)
+        
 
 
         # hard code the first three rounds to lay out my defensive 
@@ -71,15 +71,32 @@ class Player:
             value = 0
             for action in action_list:
                 # print(action)
-                value = action_evaluation(self,"player", current_state, action)
+                value = action_evaluation("player", current_state, action)
                 action_evaluation_list.append( (value, action) )
             
             action_evaluation_list = sorted(action_evaluation_list, reverse=True)
-            #print(action_evaluation_list[0])
-            print("RL:")
-            print("chosen move for RL:")
             print(action_evaluation_list[0])
-            #input("Press Enter to continue\n")
+            
+
+            # Get Action Evaluation List for Enemy
+            self.opponent_action_evaluation_list = []
+            opponent_current_state = State(copy(self.play_dict), copy(self.enemy_throws_left),
+                                 copy(self.throws_left), copy(self.enemy_side))
+            opponent_action_list = get_all_valid_action("opponent", opponent_current_state)
+            
+            opponent_value = 0
+            for opponent_action in opponent_action_list:
+                # print(action)
+                opponent_value = action_evaluation("opponent", opponent_current_state, opponent_action)
+                self.opponent_action_evaluation_list.append( (opponent_value, opponent_action) )
+            
+            self.opponent_action_evaluation_list = sorted(self.opponent_action_evaluation_list, reverse=True)
+
+
+
+            # if reached same game state three times, break the tie, choosing second best action
+            if (self.same_state_count >= 3) and (self.BREAK_TIE):
+                return action_evaluation_list[0][1]
             return action_evaluation_list[0][1]
             
 
@@ -93,6 +110,28 @@ class Player:
         The parameter opponent_action is the opponent's chosen action,
         and player_action is this instance's latest chosen action.
         """
+        
+
+        i=0
+        
+        for pair in self.opponent_action_evaluation_list:
+            if pair[1] == opponent_action:
+                self.opponent_action_count_list.append(i)
+                occurred = True
+                print("RL2 Evaluation :  Enemy's Best move:")
+                print("Best move:")
+                print(self.opponent_action_evaluation_list[0])
+                print("Chosen move:")
+                print(i)
+                print(pair)
+                break
+                #input("Press Enter to continue\n")
+            i+=1
+        #self.opponent_action_evaluation_list.index(opponent_action)
+            #print(self.opponent_action_evaluation_list[0])
+
+        
+
         #Check Repeated Game State, get previous game state:
         prev_game_state = (get_current_player_nodes_count(self, "player"), get_current_player_nodes_count(self, "opponent"))
         # do not calculate elimination now, just update symbols to play_dict
@@ -114,6 +153,24 @@ class Player:
             self.same_state_count += 1
         else:
             self.same_state_count = 0
+        
+
+        #Plot
+        if self.throws_left==0 or self.enemy_throws_left==0 or self.same_state_count >= 2:
+            if self.opponent_action_count_list:
+                dist = pd.DataFrame(self.opponent_action_count_list,columns=["IndexOfEnemyAction"])
+                # dist.agg(['min', 'max', 'mean', 'std']).round(decimals=2)
+                print("/n/nEnemy Index Mean:")
+                print(dist.mean())
+                print("/nEnemy Index STD:")
+                print(dist.std())
+                # fig, ax = plt.subplots()
+                # dist.plot.hist(density=True, ax=ax)
+                # ax.set_ylabel('Probability')
+                # ax.grid(axis='y')
+                # ax.set_facecolor('#d8dcd6')
+                # plt.savefig("output.png")
+
 
 
 def open_game_stragety(self):

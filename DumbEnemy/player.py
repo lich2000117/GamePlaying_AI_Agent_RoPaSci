@@ -1,5 +1,6 @@
-from IG.util import *
-from IG.random_algorithms import *
+from GreedyEnemy.util import *
+from GreedyEnemy.random_algorithms import *
+from GreedyEnemy.greedy_strategy import *
 
 class Player:
     
@@ -12,10 +13,17 @@ class Player:
         play as Upper), or the string "lower" (if the instance will play
         as Lower).
         """
+        #Config
+        self.REFINED_THROW = "defense"  # empty string: random throw symbols, "attack": throw enemy most symbols' counter, "defense": throw player's least symbol for supply
+        self.BFS_TUNE_MODE = True  # If using refined algorithms (get nearest nodes for BFS)
+        self.BREAK_TIE = True  # check if will break the tie when reaching same game state three times
+        
+        
         self.game_round = 1
         self.throws_left = 9   # reduced by 1 after each throw in util/put_action_board function
         self.enemy_throws_left = 9
         self.side = player
+        self.same_state_count = 0  # count of same game state, if reach 3, break the tie to avoid draw
         # Determine throw range according to different locations
         Init_throw_range(self)
 
@@ -38,16 +46,8 @@ class Player:
         of the game, select an action to play this turn.
         """
         # Random Action defined in random_algorithms.py
-        #return random_action(self)
+        return random_action(self)
         
-
-
-        #throw at the farest possible grid
-        #action = ("THROW","s", (1,0))
-        for i in self.throw_range:
-            a = 1
-        
-        return ("THROW","s", (i,0))
     
     def update(self, opponent_action, player_action):
         """
@@ -57,10 +57,13 @@ class Player:
         The parameter opponent_action is the opponent's chosen action,
         and player_action is this instance's latest chosen action.
         """
+        #Check Repeated Game State, get previous game state:
+        prev_game_state = (get_current_player_nodes_count(self, "player"), get_current_player_nodes_count(self, "opponent"))
         # do not calculate elimination now, just update symbols to play_dict
         # add each player's action to board for the reason of synchronising play.
         # if throw, also reduce throws left by 1
         
+
         add_action_to_play_dict(self, "opponent", opponent_action)
         add_action_to_play_dict(self, "player", player_action)
 
@@ -74,9 +77,15 @@ class Player:
         eliminate_and_update_board(self,self.target_dict)
         self.game_round += 1
 
-
         # if not reached whole board throw range, expanding the throw range
         update_throw_range(self)
+
+        #Check Repeated Game State:
+        cur_game_state = (get_current_player_nodes_count(self, "player"), get_current_player_nodes_count(self, "opponent"))
+        if cur_game_state == prev_game_state:
+            self.same_state_count += 1
+        else:
+            self.same_state_count = 0
         #print("\n************\nplay_dict:", self.play_dict)
         #print("\n\nthrows_left", self.throws_left)
         #print("\n\nEnemy_throws_left", self.enemy_throws_left)

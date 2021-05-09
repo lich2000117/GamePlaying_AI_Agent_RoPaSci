@@ -1,5 +1,5 @@
 from GreedyEnemy.util import *
-#from GreedyEnemy.random_algorithms import *
+from GreedyEnemy.random_algorithms import *
 from GreedyEnemy.greedy_strategy import *
 
 class Player:

@@ -1,19 +1,30 @@
 import numpy as np
 from RL.state import State
 
-def state_evaluation(state):
-    # state is in the form of (play_dict, player's throw left, opponnet's throw left, player's side)
-    feature_array = np.array([])
-    np.append(feature_array, board_count(state))
-    np.append(feature_array, hostile_token_in_throw_range(state))
-    np.append(feature_array, token_in_enemy_throw_range(state))
 
-    w = [10, 5, -5]
-    W = np.array([])
-    for i in range(0, len(feature_array)):
-        np.append(W, w[i])
+def state_evaluation(state):
+    """If next State can move towards winning"""
+    WIN_REWARD = 100
+
     
-    return feature_array.dot(W)
+    
+    return 0
+
+
+
+
+    # # state is in the form of (play_dict, player's throw left, opponnet's throw left, player's side)
+    # feature_array = np.array([])
+    # np.append(feature_array, board_count(state))
+    # np.append(feature_array, hostile_token_in_throw_range(state))
+    # np.append(feature_array, token_in_enemy_throw_range(state))
+
+    # w = [10, 5, -5]
+    # W = np.array([])
+    # for i in range(0, len(feature_array)):
+    #     np.append(W, w[i])
+    
+    # return feature_array.dot(W)
 
     
     

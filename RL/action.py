@@ -2,7 +2,7 @@
 #     # state =  (play_dict, player's throws left, opponnet's throws left, player's side)
 from RL.util import action_throw, move_action, least_distance, get_six_adj_nodes, is_point_valid
 
-def get_all_valid_action(state):
+def get_all_valid_action(player, state):
     # state =  (play_dict, player's throws left, opponnet's throws left, player's side)
     # all_valid_action = [("SLIDE",start, end), ("SWING",start, end), ("THROW",symbol_type, point)...]
     all_valid_action = []
@@ -10,7 +10,7 @@ def get_all_valid_action(state):
     move_list = []
 
     # get all the slide and swing action 
-    move_list = get_all_valid_move(state)
+    move_list = get_all_valid_move(player, state)
     all_valid_action += move_list
 
 
@@ -50,13 +50,14 @@ def get_all_valid_throw(state):
         # print("Cannont throw")
         return []
 
-def get_all_valid_move(state):
+
+def get_all_valid_move(player, state):
 
     ## all_valid_move = [("SLIDE",start, end), ("SWING",start, end)...]
     all_valid_move = []
 
-    for type in state.play_dict['player'].keys():
-        for token_pos in state.play_dict['player'][type]:
+    for type in state.play_dict[player].keys():
+        for token_pos in state.play_dict[player][type]:
             # generate valid move for each token
             move_token = (token_pos, type)
             valid_move_list = []
@@ -69,7 +70,7 @@ def get_all_valid_move(state):
             # check whether each token can swing
             swing_nodes = set()
             for node in adj_nodes:
-                player_token_list = [item for sublist in state.play_dict["player"].values() for item in sublist]       
+                player_token_list = [item for sublist in state.play_dict[player].values() for item in sublist]       
                 if node in player_token_list:
                     for swing_node in get_six_adj_nodes(node):
                         if least_distance(swing_node, move_token[0]) == 2:
