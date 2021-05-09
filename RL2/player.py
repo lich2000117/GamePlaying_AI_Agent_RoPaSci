@@ -50,8 +50,8 @@ class Player:
         self.target_dict = {"r":"s", "s":"p", "p":"r"}
 
         # Store Opponent's Action List
-        self.opponent_action_evaluation_list = []
-        self.opponent_action_count_list = []
+        self.opponent_action_score_list = []
+        self.opponent_score_df = pd.DataFrame(columns=["Total_Score_Index", "Aggresive_Index", "Defense_Index", "Punishment_Index", "State_Score_Index"])
 
         # Store history to Check Draw Game
         self.history = collections.Counter({self._snap(): 1})
@@ -71,10 +71,14 @@ class Player:
             return open_game_stragety(self)
         else:
             # Get sorted Scored Action Evaluation List for us to choose
-            action_evaluation_list = self.getScoredActionList("player")
+            total, aggresive, defense, punish, state = self.getScoredActionList("player")
+            player_score_list = [total, aggresive, defense, punish, state]
+            player_total_score_list = player_score_list[0]
 
             # Get sorted Action Evaluation List for Enemy's choice
-            self.opponent_action_evaluation_list = self.getScoredActionList("opponent")
+            total, aggresive, defense, punish, state = self.getScoredActionList("opponent")
+            self.opponent_action_score_list = [total, aggresive, defense, punish, state]
+
 
             # Avoid Draw Situation, take another action without using already used ones checked by default dict
             cur_snap = self._snap()
@@ -82,11 +86,11 @@ class Player:
                 self.cur_snap_used_action_index[cur_snap] += 1
                 next_index = self.cur_snap_used_action_index[cur_snap]
                 next_index = random.randint(0,12)
-                if next_index<len(action_evaluation_list):
-                    return action_evaluation_list[next_index][1]
+                if next_index<len(player_total_score_list):
+                    return player_total_score_list[next_index][1]
 
             # return best action
-            return action_evaluation_list[0][1]
+            return player_total_score_list[0][1]
             
 
         
@@ -100,21 +104,9 @@ class Player:
         and player_action is this instance's latest chosen action.
         """
 
-        # count enemy's choices index based on our function
-        i=0
-        for pair in self.opponent_action_evaluation_list:
-            if pair[1] == opponent_action:
-                self.opponent_action_count_list.append(i)
-                # print("RL2 Evaluation :  Enemy's Best move:")
-                # print("Best move:")
-                # print(self.opponent_action_evaluation_list[0])
-                # print("Chosen move:")
-                # print(i)
-                # print(pair)
-                break
-            i+=1
-        
-        
+        # count enemy's choices index based on our function into dataframe
+        self.update_enemy_index_count_dataframe(opponent_action)
+
         # do not calculate elimination now, just update symbols to play_dict
         # add each player's action to board for the reason of synchronising play.
         # if throw, also reduce throws left by 1
@@ -131,26 +123,24 @@ class Player:
         cur_snap = self._snap()
         self.history[cur_snap] += 1
         
-
         self.game_round += 1
+        #input("asd")
 
-        
 
         #Analyse Enemy's choice based on our evaluation list 
         if self.ANALYSIS_MODE:
-            if self.opponent_action_count_list:
-                dist = pd.DataFrame(self.opponent_action_count_list,columns=["IndexOfEnemyAction"])
-                # dist.agg(['min', 'max', 'mean', 'std']).round(decimals=2)
-                print("/n/nEnemy Index Mean:")
-                print(dist.mean())
-                print("/nEnemy Index STD:")
-                print(dist.std())
-                # fig, ax = plt.subplots()
-                # dist.plot.hist(density=True, ax=ax)
-                # ax.set_ylabel('Probability')
-                # ax.grid(axis='y')
-                # ax.set_facecolor('#d8dcd6')
-                # plt.savefig("output.png")
+            dist = self.opponent_score_df
+            # dist.agg(['min', 'max', 'mean', 'std']).round(decimals=2)
+            print("\n Enemy Index Mean:")
+            print(dist.mean())
+            print("\n Enemy Index STD:")
+            print(dist.std())
+            # fig, ax = plt.subplots()
+            # dist.plot.hist(density=True, ax=ax)
+            # ax.set_ylabel('Probability')
+            # ax.grid(axis='y')
+            # ax.set_facecolor('#d8dcd6')
+            # plt.savefig("output.png")
 
     
     def _snap(self):
@@ -174,8 +164,17 @@ class Player:
     def getScoredActionList(self, whichPlayer):
         """
         Get Sorted List Based on Scoring Function,
-        Can Use to get Opponent's score list
+        Can Use to get Opponent's score list,
+        return 4 score list:
+
+        Total_score_list;
+        Aggresive_Score_list;
+        Defense_Score_list;
+        Punishment_Score_list;
+        State_Score_list
+
         """
+
         if (whichPlayer == "player"):
             current_state = State(copy(self.play_dict), copy(self.throws_left),
                                 copy(self.enemy_throws_left), copy(self.side))
@@ -185,16 +184,58 @@ class Player:
                                 copy(self.throws_left), copy(self.side))
 
         action_list = get_all_valid_action(whichPlayer, current_state)
-        action_evaluation_list = []
-        value = 0
-        for action in action_list:
-            value = action_evaluation(whichPlayer, current_state, action)
-            action_evaluation_list.append( (value, action) )
-        action_evaluation_list = sorted(action_evaluation_list, reverse=True)
-        print(whichPlayer+"Evaluation List:")
-        print(action_evaluation_list[0])
-        return action_evaluation_list
+        Total_score_list = []
+        Aggresive_Score_list = []
+        Defense_Score_list = []
+        Punishment_Score_list = []
+        State_Score_list = []
 
+        total_score = 0
+        for action in action_list:
+            #Total:
+            total_score = action_evaluation(whichPlayer, current_state, action)["total_score"]
+            Total_score_list.append( (total_score, action) )
+            #Aggresive:
+            agg_score = action_evaluation(whichPlayer, current_state, action)["aggresive_score"]
+            Aggresive_Score_list.append( (agg_score, action) )
+            #Defensive:
+            defense_score = action_evaluation(whichPlayer, current_state, action)["defense_score"]
+            Defense_Score_list.append( (defense_score, action) )
+            #Punishment:
+            punishment_score = action_evaluation(whichPlayer, current_state, action)["punishment_score"]
+            Punishment_Score_list.append( (punishment_score, action) )
+            #StateScore:
+            state_score = action_evaluation(whichPlayer, current_state, action)["state_score"]
+            State_Score_list.append( (state_score, action) )
+
+        Total_score_list = sorted(Total_score_list, reverse=True)
+        Aggresive_Score_list_list = sorted(Aggresive_Score_list, reverse=True)
+        Defense_Score_list = sorted(Defense_Score_list, reverse=True)
+        Punishment_Score_list = sorted(Punishment_Score_list, reverse=False)
+        State_Score_list = sorted(State_Score_list, reverse=True)
+
+        print(whichPlayer+"Total Score List:")
+        print(Total_score_list[0])
+        return Total_score_list, Aggresive_Score_list, Defense_Score_list, Punishment_Score_list, State_Score_list
+
+
+    
+    # count enemy's choices index based on our function into dataframe
+    def update_enemy_index_count_dataframe(self, opponent_action):
+        out_list = []
+        for score_list in self.opponent_action_score_list:
+            i=0
+            for pair in score_list:
+                if pair[1] == opponent_action:
+                    break
+                i+=1
+            out_list.append(i)
+        if (self.opponent_action_score_list):
+            self.opponent_score_df = self.opponent_score_df.append({"Total_Score_Index":out_list[0],
+                                            "Aggresive_Index":out_list[1],
+                                            "Defense_Index":out_list[2],
+                                            "Punishment_Index":out_list[3],
+                                            "State_Score_Index":out_list[4]},ignore_index=True) 
 
 
 

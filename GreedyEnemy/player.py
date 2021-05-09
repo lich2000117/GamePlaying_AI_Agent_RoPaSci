@@ -16,7 +16,7 @@ class Player:
         #Config
         self.REFINED_THROW = "defense"  # empty string: random throw symbols, "attack": throw enemy most symbols' counter, "defense": throw player's least symbol for supply
         self.BFS_TUNE_MODE = True  # If using refined algorithms (get nearest nodes for BFS)
-        self.BREAK_TIE = False  # check if will break the tie when reaching same game state three times
+        self.BREAK_TIE = True  # check if will break the tie when reaching same game state three times
         
         
         self.game_round = 1

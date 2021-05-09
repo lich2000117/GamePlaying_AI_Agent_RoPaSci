@@ -7,4 +7,3 @@ class State:
         self.enemy_throws_left = enemy_throws_left
         self.side = side
 
-
