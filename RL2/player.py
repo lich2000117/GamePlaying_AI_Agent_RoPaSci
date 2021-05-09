@@ -70,14 +70,18 @@ class Player:
         if self.game_round <= 3:
             return open_game_stragety(self)
         else:
+            # Get sorted Action Evaluation List for Enemy's choice
+            total, aggresive, defense, punish, state = self.getScoredActionList("opponent")
+            self.opponent_action_score_list = [total, aggresive, defense, punish, state]
+
+            next_enemy_action = self.opponent_action_score_list[0][0][1]
+
             # Get sorted Scored Action Evaluation List for us to choose
             total, aggresive, defense, punish, state = self.getScoredActionList("player")
             player_score_list = [total, aggresive, defense, punish, state]
             player_total_score_list = player_score_list[0]
 
-            # Get sorted Action Evaluation List for Enemy's choice
-            total, aggresive, defense, punish, state = self.getScoredActionList("opponent")
-            self.opponent_action_score_list = [total, aggresive, defense, punish, state]
+            
 
 
             # Avoid Draw Situation, take another action without using already used ones checked by default dict
@@ -191,21 +195,22 @@ class Player:
         State_Score_list = []
 
         total_score = 0
+        scoring_dict = action_evaluation(whichPlayer, current_state, action, next_enemy_action)
         for action in action_list:
             #Total:
-            total_score = action_evaluation(whichPlayer, current_state, action)["total_score"]
+            total_score = scoring_dict["total_score"]
             Total_score_list.append( (total_score, action) )
             #Aggresive:
-            agg_score = action_evaluation(whichPlayer, current_state, action)["aggresive_score"]
+            agg_score = scoring_dict["aggresive_score"]
             Aggresive_Score_list.append( (agg_score, action) )
             #Defensive:
-            defense_score = action_evaluation(whichPlayer, current_state, action)["defense_score"]
+            defense_score = scoring_dict["defense_score"]
             Defense_Score_list.append( (defense_score, action) )
             #Punishment:
-            punishment_score = action_evaluation(whichPlayer, current_state, action)["punishment_score"]
+            punishment_score = scoring_dict["punishment_score"]
             Punishment_Score_list.append( (punishment_score, action) )
             #StateScore:
-            state_score = action_evaluation(whichPlayer, current_state, action)["state_score"]
+            state_score = scoring_dict["state_score"]
             State_Score_list.append( (state_score, action) )
 
         Total_score_list = sorted(Total_score_list, reverse=True)
