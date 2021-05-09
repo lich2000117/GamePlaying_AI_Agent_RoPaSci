@@ -1,32 +1,46 @@
 import numpy as np
-from RL.state import State
-
+from RL.state import State, isGameEnded
+import _pickle as cPickle
+from math import tanh
+import os
+import csv
 
 def state_evaluation(state):
-    """If next State can move towards winning"""
-    WIN_REWARD = 100
+    # state is in the form of (play_dict, player's throw left, opponnet's throw left, player's side)
+    # isGameEnded(state) returns (True, "Winner") or (True, "Loser") or (False, "Unknown")
+    if isGameEnded(state)[0]:
+        # if true, return the utility of the state, 1 for victory, 0 for lose
+        if isGameEnded(state)[1] == "Winner":
+            return 1
+        elif isGameEnded(state)[1] == "Draw":
+            return 0.5
+        else:
+            return 0
+    else:
+        # if false, do evaluation of the state, and return the state_score
+        if os.stat("RL/weights.csv").st_size == 0:
+                w = [10, 5, -5]
+        else:
+            with open("RL/weights.csv") as csv_file:
+                csv_reader = csv.reader(csv_file, delimiter=',')
+                row = next(csv_reader)
+                w = []
+                for num in row:
+                    w.append(float(num))
+        # with open(r"weights.pickle", "wb") as output_file:
+        #     cPickle.dump(w, output_file)
+        # pickle_file will be closed at this point, preventing your from accessing it any further
+        feature_array = np.array([])
+        np.append(feature_array, board_count(state))
+        np.append(feature_array, hostile_token_in_throw_range(state))
+        np.append(feature_array, token_in_enemy_throw_range(state))
 
-    
-    
-    return 0
-
-
-
-
-    # # state is in the form of (play_dict, player's throw left, opponnet's throw left, player's side)
-    # feature_array = np.array([])
-    # np.append(feature_array, board_count(state))
-    # np.append(feature_array, hostile_token_in_throw_range(state))
-    # np.append(feature_array, token_in_enemy_throw_range(state))
-
-    # w = [10, 5, -5]
-    # W = np.array([])
-    # for i in range(0, len(feature_array)):
-    #     np.append(W, w[i])
-    
-    # return feature_array.dot(W)
-
-    
+        
+        W = np.array([])
+        for i in range(0, len(feature_array)):
+            np.append(W, w[i])
+        
+        return feature_array.dot(W)
     
 
 def board_count(state):
@@ -85,4 +99,7 @@ def token_in_enemy_throw_range(state):
             if token[0] in enemy_throw_range:
                 value += 1
     return value - 1
+
+
+
         

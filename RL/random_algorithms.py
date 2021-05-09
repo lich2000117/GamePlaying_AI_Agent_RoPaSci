@@ -1,6 +1,6 @@
 import random
-from GreedyEnemy.util import *
-
+from GreedyEnemy.util import action_throw, get_current_player_nodes_count, get_six_adj_nodes, least_distance
+from GreedyEnemy.util import is_point_on_map, action_slide, action_swing
 # random throw a symbol at random location
 def random_throw(player_class):
     
@@ -105,6 +105,6 @@ def do_random_slide_swing(player_class):
         # if have valid node list, break the random loop
         if (random_set[1]):
             symbol_location = random.choice(random_set[1])
-            symbol_type = random_set[0]
+            #symbol_type = random_set[0]
             break
     return random_move_one_node(symbol_location, player_class.play_dict)

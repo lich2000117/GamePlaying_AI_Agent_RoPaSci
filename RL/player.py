@@ -2,8 +2,11 @@ from RL.util import Init_throw_range, add_action_to_play_dict, eliminate_and_upd
 from RL.action import get_all_valid_action
 from RL.action_evaluation import action_evaluation
 from RL.state import State
-from RL.random_algorithms import *
+from RL.random_algorithms import refined_random_throw, random_throw, random_action, get_current_player_nodes_count
 from copy import copy
+import csv
+from RL.learning import temporal_difference_learning
+import os
 
 class Player:
     
@@ -23,7 +26,7 @@ class Player:
         self.throws_left = 9   # reduced by 1 after each throw in util/add_action_board function
         self.enemy_throws_left = 9
         self.side = player
-
+        
         # Determine throw range according to different locations
         self.throw_range = tuple()
         self.enemy_throws_range = tuple()
@@ -38,6 +41,8 @@ class Player:
         
         # target_dict is used to store relationship between 2 symbols
         self.target_dict = {"r":"s", "s":"p", "p":"r"}
+        self.states_list = []   # used to store states happen in the past turn, a list of State object
+
 
 
     def action(self):
@@ -99,6 +104,10 @@ class Player:
         # add each player's action to board for the reason of synchronising play.
         # if throw, also reduce throws left by 1
 
+
+        # store state into a file 
+        
+        
         add_action_to_play_dict(self, "opponent", opponent_action)
         add_action_to_play_dict(self, "player", player_action)
 
@@ -108,6 +117,29 @@ class Player:
         eliminate_and_update_board(self,self.target_dict)
         self.game_round += 1
 
+        new_state = State(copy(self.play_dict), copy(self.throws_left),
+                                 copy(self.enemy_throws_left), copy(self.side))
+        self.states_list.append(new_state)
+
+        if self.game_round >= 4:
+            if os.stat("RL/weights.csv").st_size == 0:
+                pre_w = [10, 5, -5]
+            else:
+                with open("RL/weights.csv") as csv_file:
+                    csv_reader = csv.reader(csv_file, delimiter=',')
+                    row = next(csv_reader)
+                    pre_w = []
+                    for num in row:
+                        pre_w.append(float(num))
+                print("Previous weight: ", pre_w)
+                update_w = temporal_difference_learning(self.states_list, pre_w) 
+                print("Weights after update: ", update_w)                       
+                with open('protagonist.csv', 'w', newline='') as file:
+                    writer = csv.writer(file)
+                    writer.writerow(update_w)
+        
+
+        input("\nPress enter to continue! ")
         #Check Repeated Game State:
         cur_game_state = (get_current_player_nodes_count(self, "player"), get_current_player_nodes_count(self, "opponent"))
         if cur_game_state == prev_game_state:
