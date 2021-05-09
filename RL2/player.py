@@ -4,6 +4,7 @@ from RL2.action_evaluation import action_evaluation
 from RL.state import State
 from RL.random_algorithms import *
 from copy import copy
+from copy import deepcopy
 import random
 
 import pandas as pd
@@ -25,6 +26,8 @@ class Player:
         self.ANALYSIS_MODE = True
         self.AVOID_DRAW = True   # if algorithm break tie automatically
         self.REFINED_THROW = True   # if using advanced random throw strategy
+        self.CONFIDENCE_LEVEL = 0.05   #confidence level to exclude outliers into distribution
+        self.IGNORE_ROUND = 5  # ignore first 5 rounds when doing probability predicting
 
         self.game_round = 1
         self.throws_left = 9   # reduced by 1 after each throw in util/add_action_board function
@@ -51,7 +54,13 @@ class Player:
 
         # Store Opponent's Action List
         self.opponent_action_score_list = []
-        self.opponent_score_df = pd.DataFrame(columns=["Total_Score_Index", "Aggresive_Index", "Defense_Index", "Punishment_Index", "State_Score_Index"])
+        self.score_names = ["Total_Score_Index", "Aggresive_Index", "Defense_Index", "Punishment_Index", "State_Score_Index"]
+        self.opponent_score_df = pd.DataFrame(columns=self.score_names)
+        self.enemy_action_dist_dict = {}
+        for name in self.score_names:
+            self.enemy_action_dist_dict[name] = {"mean":0,"std":200}  #this dict store each score's distribution
+        
+        
 
         # Store history to Check Draw Game
         self.history = collections.Counter({self._snap(): 1})
@@ -66,6 +75,37 @@ class Player:
         of the game, select an action to play this turn.
         """
         
+        selected_score = ""
+        # Get Enemy Action's Probability and index
+        if (self.game_round >= self.IGNORE_ROUND *2):
+            df = self.opponent_score_df
+            # Select The Score we want to use to evaluate enemy's action
+            # Selecting Least Standard Deviation one
+            min_std = min(df.std())
+            
+            # if select 0 std deviation use default total_score mean
+            #if min_std == 0:
+            selected_mean = df.loc[:,"Total_Score_Index"].mean()
+            selected_std = df.loc[:,"Total_Score_Index"].std()
+            selected_score = 0
+            #else:
+                # selected_enemy_score_df = df.loc[:,(df.std()==min_std)]
+                # print(selected_enemy_score_df)
+                # selected_mean = selected_enemy_score_df.mean()
+                # selected_std = selected_enemy_score_df.std()
+                # for name in self.score_names:
+                #     if df[name].std()==min_std:
+                #         selected_score = self.score_names.index(name)  # find smallest std score name 
+                        
+            selected_index = int(round(selected_mean))
+            print("``````````````````````````````````````````")
+            print("selected_score name")
+            print(selected_score)
+            print("selected_enemy_index")
+            print(selected_index)
+            print("``````````````````````````````````````````")
+
+
         # hard code the first three rounds to lay out my defensive 
         if self.game_round <= 3:
             return open_game_stragety(self)
@@ -74,10 +114,17 @@ class Player:
             total, aggresive, defense, punish, state = self.getScoredActionList("opponent")
             self.opponent_action_score_list = [total, aggresive, defense, punish, state]
 
+            #Next Enemy Action
+            # try:
+            #     next_enemy_action = self.opponent_action_score_list[selected_score][selected_index][1]
+            #     #input("sucess")
+            # except:
             next_enemy_action = self.opponent_action_score_list[0][0][1]
 
+
+
             # Get sorted Scored Action Evaluation List for us to choose
-            total, aggresive, defense, punish, state = self.getScoredActionList("player")
+            total, aggresive, defense, punish, state = self.getScoredActionList("player", None)
             player_score_list = [total, aggresive, defense, punish, state]
             player_total_score_list = player_score_list[0]
 
@@ -92,7 +139,7 @@ class Player:
                 next_index = random.randint(0,12)
                 if next_index<len(player_total_score_list):
                     return player_total_score_list[next_index][1]
-
+            
             # return best action
             return player_total_score_list[0][1]
             
@@ -107,9 +154,9 @@ class Player:
         The parameter opponent_action is the opponent's chosen action,
         and player_action is this instance's latest chosen action.
         """
-
         # count enemy's choices index based on our function into dataframe
-        self.update_enemy_index_count_dataframe(opponent_action)
+        if (self.game_round > self.IGNORE_ROUND):
+            self.update_enemy_index_count_dataframe(opponent_action)
 
         # do not calculate elimination now, just update symbols to play_dict
         # add each player's action to board for the reason of synchronising play.
@@ -132,7 +179,7 @@ class Player:
 
 
         #Analyse Enemy's choice based on our evaluation list 
-        if self.ANALYSIS_MODE:
+        if ((self.game_round>self.IGNORE_ROUND) and (self.ANALYSIS_MODE)):
             dist = self.opponent_score_df
             # dist.agg(['min', 'max', 'mean', 'std']).round(decimals=2)
             print("\n Enemy Index Mean:")
@@ -165,7 +212,7 @@ class Player:
 
 
 
-    def getScoredActionList(self, whichPlayer):
+    def getScoredActionList(self, whichPlayer, Enemy_Next_Action=None):
         """
         Get Sorted List Based on Scoring Function,
         Can Use to get Opponent's score list,
@@ -178,15 +225,23 @@ class Player:
         State_Score_list
 
         """
-
+        Enemy_Next_Action=None
         if (whichPlayer == "player"):
-            current_state = State(copy(self.play_dict), copy(self.throws_left),
+            new_state = State(copy(self.play_dict), copy(self.throws_left),
                                 copy(self.enemy_throws_left), copy(self.side))
         else:
             #Reverse throws_left and enemy_throws_left for enemy evaluation
-            current_state = State(copy(self.play_dict), copy(self.enemy_throws_left),
+            new_state = State(copy(self.play_dict), copy(self.enemy_throws_left),
                                 copy(self.throws_left), copy(self.side))
 
+        # add enemy next action into state
+        if Enemy_Next_Action:
+            current_state = add_next_action_to_play_dict(new_state, "opponent", Enemy_Next_Action)
+            eliminate_and_update_board(current_state, new_state.target_dict)
+        else:
+            current_state = new_state
+        print("````````````````````````````````Enemy_Next_Action````````````````````````````````")
+        print(Enemy_Next_Action)
         action_list = get_all_valid_action(whichPlayer, current_state)
         Total_score_list = []
         Aggresive_Score_list = []
@@ -195,8 +250,9 @@ class Player:
         State_Score_list = []
 
         total_score = 0
-        scoring_dict = action_evaluation(whichPlayer, current_state, action, next_enemy_action)
+        
         for action in action_list:
+            scoring_dict = action_evaluation(whichPlayer, current_state, action)
             #Total:
             total_score = scoring_dict["total_score"]
             Total_score_list.append( (total_score, action) )
@@ -219,29 +275,56 @@ class Player:
         Punishment_Score_list = sorted(Punishment_Score_list, reverse=False)
         State_Score_list = sorted(State_Score_list, reverse=True)
 
-        print(whichPlayer+"Total Score List:")
-        print(Total_score_list[0])
+        print(whichPlayer+" Total Score List:")
+        #print(Total_score_list)
         return Total_score_list, Aggresive_Score_list, Defense_Score_list, Punishment_Score_list, State_Score_list
 
 
+
+   
     
     # count enemy's choices index based on our function into dataframe
     def update_enemy_index_count_dataframe(self, opponent_action):
-        out_list = []
+        #iterate through all types of score
+        score_index = 0
+
+        score_row =[]
         for score_list in self.opponent_action_score_list:
-            i=0
+            cur_score_name = self.score_names[score_index] #store which score are we looking at
+            index=0  #Enemy Selection's index
             for pair in score_list:
+                # Match an action, get its index
                 if pair[1] == opponent_action:
                     break
-                i+=1
-            out_list.append(i)
-        if (self.opponent_action_score_list):
-            self.opponent_score_df = self.opponent_score_df.append({"Total_Score_Index":out_list[0],
-                                            "Aggresive_Index":out_list[1],
-                                            "Defense_Index":out_list[2],
-                                            "Punishment_Index":out_list[3],
-                                            "State_Score_Index":out_list[4]},ignore_index=True) 
+                index+=1
+            # print(self.enemy_action_dist_dict)
+            # print(calculate_normal_probability(index, self.enemy_action_dist_dict[cur_score_name]))
+            # input("asdas")
 
+             # not enough data, add directly
+            if (len(self.opponent_score_df[cur_score_name])<30):
+                score_row.append(index)
+            else:
+                #Excluding Potential Outlier and add index to dataframe's column
+                if calculate_normal_probability(index, self.enemy_action_dist_dict[cur_score_name]) > self.CONFIDENCE_LEVEL:
+                    score_row.append(index)
+                else:
+                    score_row.append(self.opponent_score_df[cur_score_name].mean())
+            score_index += 1
+        
+        #updating dataframe
+        if (self.opponent_action_score_list):
+            self.opponent_score_df = self.opponent_score_df.append({"Total_Score_Index":score_row[0],
+                                            "Aggresive_Index":score_row[1],
+                                            "Defense_Index":score_row[2],
+                                            "Punishment_Index":score_row[3],
+                                            "State_Score_Index":score_row[4]},ignore_index=True) 
+
+        # Updating Distribution
+        for name in self.score_names:
+            self.enemy_action_dist_dict[name]["mean"] = self.opponent_score_df[name].mean()
+            if (len(self.opponent_score_df[name]) > self.IGNORE_ROUND):
+                self.enemy_action_dist_dict[name]["std"] = self.opponent_score_df[name].std()
 
 
 def open_game_stragety(self):
@@ -261,3 +344,33 @@ def open_game_stragety(self):
         if self.side == "lower":
             return ("THROW", "s", (-3, 1))
 
+
+def add_next_action_to_play_dict(state, player, action):
+    """
+    This function copy the previous state and add action on the new board and return the new
+    state 
+    """
+    # copy the previous state
+    new_state = deepcopy(state)
+
+    if action[0] in "THROW":
+        #If throw, add a symbol onto board
+        symbol_type = action[1]
+        location = action[2]
+        new_state.play_dict[player][symbol_type].append(location)
+        #reduce available throw times by 1
+        if player == "opponent":
+            new_state.enemy_throws_left -= 1
+        else:
+            new_state.throws_left -= 1
+    else:
+        print(action)
+        move_from = action[1]
+        symbol_type = get_symbol_by_location(player, new_state.play_dict, move_from)
+        move_to = action[2]
+        # move token from start to end, simply update play_dict
+
+        # move the token by adding new position and remove old one
+        new_state.play_dict[player][symbol_type].remove(move_from)
+        new_state.play_dict[player][symbol_type].append(move_to)
+    return new_state

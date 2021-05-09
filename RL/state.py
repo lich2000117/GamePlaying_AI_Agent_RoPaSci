@@ -6,4 +6,4 @@ class State:
         self.throws_left = throws_left
         self.enemy_throws_left = enemy_throws_left
         self.side = side
-
+        self.target_dict = {'r':'s', 'p':'r', 's':'p'}

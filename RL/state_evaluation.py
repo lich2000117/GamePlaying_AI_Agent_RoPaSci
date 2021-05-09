@@ -1,11 +1,20 @@
 import numpy as np
 from RL.state import State
+from RL.util import *
 
 
 def state_evaluation(state):
     """If next State can move towards winning"""
-    WIN_REWARD = 100
 
+    WIN_REWARD = 999
+
+
+    target_dict = {'r':'s', 'p':'r', 's':'p'}
+    if isWinThisGame(state) == True:
+        return WIN_REWARD
+    elif isWinThisGame(state) == False:
+        return -WIN_REWARD
+        
     
     
     return 0
@@ -26,8 +35,45 @@ def state_evaluation(state):
     
     # return feature_array.dot(W)
 
+
+def isWinThisGame(state):
+    """Check if winning"""
+    #Eat All Enemy
+    if state.enemy_throws_left == 0:
+        if sum(get_current_player_nodes_count(state, "opponent").values()) == 0:
+            return True
+    #Check Invincible
+    checkInvincible(state)
+    if checkInvincible(state) == "Win":
+        return True
+    elif checkInvincible(state) == "Lose":
+        return False
+
     
+#Check Invincible State
+def checkInvincible(state):
+    #check if our player have invicible token
+    if state.enemy_throws_left == 0:
+        for tk, x in state.play_dict["player"].items():
+            if x:
+                counter_token_type = state.target_dict[state.target_dict[tk]]
+                counter_token_list = state.play_dict["opponent"][counter_token_type]
+                if not counter_token_list:
+                    #No counter token can eat us
+                    return "Win"
+    #check if opponent has invincible token
+    if state.throws_left == 0:
+        for tk, x in state.play_dict["opponent"].items():
+            if x:
+                counter_token_type = state.target_dict[state.target_dict[tk]]
+                counter_token_list = state.play_dict["player"][counter_token_type]
+                if not counter_token_list:
+                    #No counter token can eat 
+                    return "Lose"
     
+            
+        
+        
 
 def board_count(state):
     """this function is used to count how many more tokens we have than our opponent"""

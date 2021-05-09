@@ -22,8 +22,8 @@ def action_evaluation(whichPlayer,state, action):
 
     reward_list = []
     ################ chasing action reward parameter ###################
-    CHASING_REWARD = 5
-    ELIMINATION_REWARD = 15
+    CHASING_REWARD = 50
+    ELIMINATION_REWARD = 150
 
     ################ fleeing action reward parameter ###################
     FLEE_REWARD = 5
@@ -31,7 +31,7 @@ def action_evaluation(whichPlayer,state, action):
     ALERT_DISTANCE = 3
 
     ################ approaching action reward parameter ###################
-    APPROACHING_REWARD = 3
+    APPROACHING_REWARD = 5
 
     ################ avoid danger action reward parameter ###################
     AVOID_DANGER_REWARD = 2
@@ -254,7 +254,11 @@ def action_evaluation(whichPlayer,state, action):
     # evaluation of post-action state
     state_score = state_evaluation(new_state)
 
-
+    # if definitely win, prefer to eat our own token
+    if state_score > 800:
+        total_score = -PUNISHMENT_WEIGHT *  punishment_score \
+                + state_score
+ 
     total_score = AGGRESIVE_WEIGHT  *  aggresive_score \
                 + DEFENSIVE_WEIGHT  *  defense_score \
                 + PUNISHMENT_WEIGHT *  punishment_score \

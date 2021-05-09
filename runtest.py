@@ -5,8 +5,8 @@ import sys
 
 # config --------------------------------------------------------------------------------------
 PLAY_TIMES = 50   # Match Times
-UPPER = 'RL'   # upper
-LOWER = 'RandomEnemy'    # lower
+UPPER = 'RL2'   # upper
+LOWER = 'GreedyEnemy'    # lower
 SHOW_BUG_MATCH = True  # show match detail of a bugged match
 SHOW_TIMEOUT_MATCH = True  # show match detail of a timed out match
 # config --------------------------------------------------------------------------------------
