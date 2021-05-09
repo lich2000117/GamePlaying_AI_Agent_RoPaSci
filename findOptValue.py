@@ -4,14 +4,15 @@ import os
 import sys
 
 # config --------------------------------------------------------------------------------------
-PLAY_TIMES = 100   # Match Times
+PLAY_TIMES = 10   # Match Times
 UPPER = 'RL2'   # upper
-LOWER = 'GreedyEnemy'    # lower
+LOWER = 'RL2No'    # lower
 SHOW_BUG_MATCH = True  # show match detail of a bugged match
 SHOW_TIMEOUT_MATCH = False  # show match detail of a timed out match
 # config --------------------------------------------------------------------------------------
 
-
+with open("config.json") as f:
+    config = f
 
 
 

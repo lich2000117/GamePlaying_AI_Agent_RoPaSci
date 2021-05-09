@@ -75,8 +75,7 @@ class Player:
         of the game, select an action to play this turn.
         """
         
-        selected_score = 0
-        selected_index = 0
+        selected_score = ""
         # Get Enemy Action's Probability and index
         if (self.game_round >= self.IGNORE_ROUND *2):
             df = self.opponent_score_df
@@ -101,7 +100,7 @@ class Player:
             selected_index = int(round(selected_mean))
             print("``````````````````````````````````````````")
             print("selected_score name")
-            print(str(selected_score))
+            print(selected_score)
             print("selected_enemy_index")
             print(selected_index)
             print("``````````````````````````````````````````")
@@ -116,17 +115,16 @@ class Player:
             self.opponent_action_score_list = [total, aggresive, defense, punish, state]
 
             #Next Enemy Action
-            if (self.opponent_action_score_list):
-                if (len(self.opponent_action_score_list[selected_score]) > selected_index):
-                    next_enemy_action = self.opponent_action_score_list[selected_score][selected_index][1]
-            #input("sucess")
-                else:
-                    next_enemy_action = self.opponent_action_score_list[0][0][1]
+            # try:
+            #     next_enemy_action = self.opponent_action_score_list[selected_score][selected_index][1]
+            #     #input("sucess")
+            # except:
+            next_enemy_action = self.opponent_action_score_list[0][0][1]
 
 
 
             # Get sorted Scored Action Evaluation List for us to choose
-            total, aggresive, defense, punish, state = self.getScoredActionList("player", next_enemy_action)
+            total, aggresive, defense, punish, state = self.getScoredActionList("player", None)
             player_score_list = [total, aggresive, defense, punish, state]
             player_total_score_list = player_score_list[0]
 

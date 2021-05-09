@@ -22,8 +22,8 @@ def action_evaluation(whichPlayer,state, action):
 
     reward_list = []
     ################ chasing action reward parameter ###################
-    CHASING_REWARD = 50
-    ELIMINATION_REWARD = 150
+    CHASING_REWARD = 5
+    ELIMINATION_REWARD = 15
 
     ################ fleeing action reward parameter ###################
     FLEE_REWARD = 5
