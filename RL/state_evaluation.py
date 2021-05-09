@@ -6,16 +6,20 @@ import os
 import csv
 
 def state_evaluation(state):
+
+    WINNING_REWARD = 999
+    DRAW_REWARD = -100
+
     # state is in the form of (play_dict, player's throw left, opponnet's throw left, player's side)
     # isGameEnded(state) returns (True, "Winner") or (True, "Loser") or (False, "Unknown")
     if isGameEnded(state)[0]:
         # if true, return the utility of the state, 1 for victory, 0 for lose
         if isGameEnded(state)[1] == "Winner":
-            return 1
+            return WINNING_REWARD
         elif isGameEnded(state)[1] == "Draw":
-            return 0.5
+            return DRAW_REWARD
         else:
-            return 0
+            return -WINNING_REWARD
     else:
         # if false, do evaluation of the state, and return the state_score
         if os.stat("RL/weights.csv").st_size == 0:
