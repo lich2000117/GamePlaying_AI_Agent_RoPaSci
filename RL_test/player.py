@@ -1,15 +1,17 @@
-from RL_base.util import Init_throw_range, add_action_to_play_dict, eliminate_and_update_board, calculate_normal_probability, get_symbol_by_location
-from RL_base.action import get_all_valid_action
-from RL_base.action_evaluation import action_evaluation
-from RL_base.state import State
+from RL_test.util import Init_throw_range, add_action_to_play_dict, eliminate_and_update_board, calculate_normal_probability, get_symbol_by_location
+from RL_test.action import get_all_valid_action
+from RL_test.action_evaluation import action_evaluation
+from RL_test.state import State
 from copy import copy
 from copy import deepcopy
 import random
-from RL_base.random_algorithms import refined_random_throw, random_throw, random_action, get_current_player_nodes_count
+from RL_test.random_algorithms import refined_random_throw, random_throw, random_action, get_current_player_nodes_count
 import csv
-from RL_base.learning import temporal_difference_learning
+from RL_test.learning import temporal_difference_learning
 import os
+import numpy as np
 
+import math
 import pandas as pd
 import matplotlib.pyplot as plt
 import collections
@@ -64,14 +66,12 @@ class Player:
         # Store Opponent's Action List
         self.opponent_action_score_list = []
         self.score_names = ["Total_Score_Index", "Aggresive_Index", "Defense_Index", "Punishment_Index", "State_Score_Index"]
-        self.opponent_score_df = pd.DataFrame(columns=self.score_names)
+        self.opponent_score_array = np.array(0)
         self.enemy_action_dist_dict = {}
         self.predicted_enemy_action = ()
         self.corrected_predict = 0
         self.total_predict = 0
         self.predict_accuracy = 0.0
-        for name in self.score_names:
-            self.enemy_action_dist_dict[name] = {"mean":0,"std":200}  #this dict store each score's distribution
         
         
 
@@ -88,50 +88,42 @@ class Player:
         Called at the beginning of each turn. Based on the current state
         of the game, select an action to play this turn.
         """
+        # Get Enemy Action's Probability and return the mean index using "Total Score"
         selected_score = 0
         selected_index = 0
-        # Get Enemy Action's Probability and return the mean index using "Total Score"
-        if (self.game_round >= self.IGNORE_ROUND *2):
-            selected_score, selected_mean = self.select_enemy_next_index()
-
+        next_enemy_action = None
         # hard code the first three rounds to lay out my defensive 
         if self.game_round <= 3:
             return open_game_stragety(self)
         else:
             # Get sorted Action Evaluation List for Enemy's choice
-            total, aggresive, defense, punish, state = self.getScoredActionList("opponent")
-            self.opponent_action_score_list = [total, aggresive, defense, punish, state]
+            self.opponent_action_score_list = self.getScoredActionList("opponent")
+            # print(self.opponent_action_score_list)
+            # input("asd")
+            if (self.opponent_action_score_list) and (self.game_round >= self.IGNORE_ROUND *2):
+                predict_index = self.select_enemy_next_index()
+                #using Total Score List
+                #for i in range(1,len(self.opponent_action_score_list)):
+                    #self.opponent_action_score_list[0][i] = tuple(list(self.opponent_action_score_list[i]).append(self.calculate_probability(i)))
+                # update enemy's action probability list
+                #self.opponent_action_list_with_prob = self.opponent_action_score_list
+                self.update_next_enemy_action(predict_index)   # update enemy's next action into player class
 
-            #Next Enemy Action
-            if (self.opponent_action_score_list):
-                if (len(self.opponent_action_score_list[selected_score]) > selected_index):
-                    next_enemy_action = self.opponent_action_score_list[selected_score][selected_index][1]
-                else:
-                    next_enemy_action = self.opponent_action_score_list[0][0][1]
-                # always greedy predict enemy
-                if (self.GREEDY_PREDICT):
-                    next_enemy_action = self.opponent_action_score_list[0][0][1]  
-            
             # Get sorted Scored Action Evaluation List for us to choose
-            self.predicted_enemy_action = next_enemy_action
-            total, aggresive, defense, punish, state = self.getScoredActionList("player", next_enemy_action)
-            player_score_list = [total, aggresive, defense, punish, state]
-            player_total_score_list = player_score_list[0]  
+            player_total_score_list = self.getScoredActionList("player", self.predicted_enemy_action)
 
-
-            # Avoid Draw Situation, take another action without using already used ones checked by default dict
+            # Check Repeated State
+            # Avoid Draw Situation, take another action without using already used indexes checked by default dict
             cur_snap = self._snap()
             if (self.history[cur_snap] >= 2 and self.AVOID_DRAW):
-                self.cur_snap_used_action_index[cur_snap] += 1
-                next_index = self.cur_snap_used_action_index[cur_snap]
-                next_index = random.randint(0,12)
-                if next_index<len(player_total_score_list):
-                    return player_total_score_list[next_index][1]
+                player_best_action = self.draw_avoid_best_action(player_total_score_list, cur_snap)
+            else:
+                player_best_action = player_total_score_list[0][1]
+            # if not player_best_action:
+            #     # if no action, redo evaluation without enemy's action
+            #     player_total_score_list = self.getScoredActionList("player", next_enemy_action)
             
-            # return best action, if no action, do evaluation without enemy's action
-            if len(player_total_score_list) < 1:
-                player_total_score_list = self.getScoredActionList("player", next_enemy_action)
-            return player_total_score_list[0][1]
+            return player_best_action
             
 
         
@@ -144,85 +136,73 @@ class Player:
         The parameter opponent_action is the opponent's chosen action,
         and player_action is this instance's latest chosen action.
         """
-
-        # Get the accuracy of our prediction
-        if self.predicted_enemy_action:
-            self.total_predict += 1
-            if (self.predicted_enemy_action == opponent_action):
-                self.corrected_predict += 1
-                
-
-        # count enemy's choices index based on our function into dataframe
+        self.update_accuracy_of_prediction(opponent_action)
+        
+        # count enemy's choices index based on our function into array
         if (self.game_round > self.IGNORE_ROUND):
             self.update_enemy_index_count_dataframe(opponent_action)
 
         # do not calculate elimination now, just update symbols to play_dict
         # add each player's action to board for the reason of synchronising play.
         # if throw, also reduce throws left by 1
-
         add_action_to_play_dict(self, "opponent", opponent_action)
         add_action_to_play_dict(self, "player", player_action)
-
         # update self representation of the game
         # Calculate eliminations and update
         # after token actions, check if eliminate other tokens by following function
         eliminate_and_update_board(self,self.target_dict)
 
-        # store state into a file 
-        new_state = State(copy(self.play_dict), copy(self.throws_left),
-                                 copy(self.enemy_throws_left), copy(self.side))
-        self.states_list.append(new_state)
 
-        if (self.game_round >= 4) and (self.TEMPORAL_DIFF_LEARNING==True):
-            if os.stat("RL/weights.csv").st_size == 0:
-                pre_w = [10, 5, -5]
-            else:
-                with open("RL/weights.csv") as csv_file:
-                    csv_reader = csv.reader(csv_file, delimiter=',')
-                    row = next(csv_reader)
-                    pre_w = []
-                    for num in row:
-                        pre_w.append(float(num))
-                #print("Previous weight: ", pre_w)
-                update_w = temporal_difference_learning(self.states_list, pre_w, self.beta) 
-                #print("Weights after update: ", update_w)                       
-                with open('RL/weights.csv', 'w', newline='') as file:
-                    writer = csv.writer(file)
-                    writer.writerow(update_w)
+        if ((self.TEMPORAL_DIFF_LEARNING==True)):
+            # store state into a file 
+            new_state = State(copy(self.play_dict), copy(self.throws_left),
+                                    copy(self.enemy_throws_left), copy(self.side))
+            self.states_list.append(new_state)
 
-
-        #input("\nPress enter to continue! ")
-
-        # Keep Track of prediction accuracy
-        if (self.total_predict):
-            self.predict_accuracy = round(self.corrected_predict/self.total_predict,3)
+            if (self.game_round >= 4):
+                if os.stat("RL/weights.csv").st_size == 0:
+                    pre_w = [10, 5, -5]
+                else:
+                    with open("RL/weights.csv") as csv_file:
+                        csv_reader = csv.reader(csv_file, delimiter=',')
+                        row = next(csv_reader)
+                        pre_w = []
+                        for num in row:
+                            pre_w.append(float(num))
+                    #print("Previous weight: ", pre_w)
+                    update_w = temporal_difference_learning(self.states_list, pre_w, self.beta) 
+                    #print("Weights after update: ", update_w)                       
+                    with open('RL/weights.csv', 'w', newline='') as file:
+                        writer = csv.writer(file)
+                        writer.writerow(update_w)
+        
 
         # Take a snap of current game state and store it
         cur_snap = self._snap()
         self.history[cur_snap] += 1
-        
         self.game_round += 1
 
 
         #Analyse Enemy's choice based on our evaluation list 
-        if ((self.game_round>self.IGNORE_ROUND) and (self.ANALYSIS_MODE)):
-            dist = self.opponent_score_df
-            # dist.agg(['min', 'max', 'mean', 'std']).round(decimals=2)
-            print("\n Enemy Index Mean:")
-            print(dist.mean())
-            print("\n Enemy Index STD:")
-            print(dist.std())
-            print("\nAccuracy of Prediction:")
-            if self.total_predict:
-                print(round(self.corrected_predict/self.total_predict,3))
-            print("\nMake Prediction Percentage:")
-            print(round(self.total_predict/self.game_round,3))
-            # fig, ax = plt.subplots()
-            # dist.plot.hist(density=True, ax=ax)
-            # ax.set_ylabel('Probability')
-            # ax.grid(axis='y')
-            # ax.set_facecolor('#d8dcd6')
-            # plt.savefig("output.png")
+        if (self.ANALYSIS_MODE):
+            if (self.game_round>self.IGNORE_ROUND):
+                array = self.opponent_score_array
+                # dist.agg(['min', 'max', 'mean', 'std']).round(decimals=2)
+                print("\n Enemy Index Mean:")
+                print(np.mean(array))
+                print("\n Enemy Index STD:")
+                print(np.std(array))
+                print("\nAccuracy of Prediction:")
+                if self.total_predict:
+                    print(round(self.corrected_predict/self.total_predict,3))
+                print("\nMake Prediction Percentage:")
+                print(round(self.total_predict/self.game_round,3))
+                # fig, ax = plt.subplots()
+                # dist.plot.hist(density=True, ax=ax)
+                # ax.set_ylabel('Probability')
+                # ax.grid(axis='y')
+                # ax.set_facecolor('#d8dcd6')
+                # plt.savefig("output.png")
 
     
     def _snap(self):
@@ -242,6 +222,36 @@ class Player:
         )
 
 
+    def update_accuracy_of_prediction(self, opponent_action):
+        """ Get the accuracy of our prediction"""
+        if self.predicted_enemy_action:
+            self.total_predict += 1
+            if (self.predicted_enemy_action == opponent_action):
+                self.corrected_predict += 1
+                # Keep Track of prediction accuracy
+        if (self.total_predict):
+            self.predict_accuracy = round(self.corrected_predict/self.total_predict,3)
+
+    def update_next_enemy_action(self, predict_index):
+        """update enemy's next action into player class"""
+        # always greedy predict enemy
+        if (self.GREEDY_PREDICT):
+            self.predicted_enemy_action = self.opponent_action_score_list[0][1]  
+        else:
+            # hard coding, get Next Enemy Action without using probability
+            if (len(self.opponent_action_score_list) > predict_index):
+                self.predicted_enemy_action = self.opponent_action_score_list[predict_index][1]
+            else:
+                self.predicted_enemy_action = self.opponent_action_score_list[0][1]
+
+    def draw_avoid_best_action(self, player_total_score_list, cur_snap):
+        """Avoid Draw Situation, take another action without using already used indexes checked by default dict"""
+        self.cur_snap_used_action_index[cur_snap] += 1
+        next_index = self.cur_snap_used_action_index[cur_snap]
+        if next_index<len(player_total_score_list):
+            return player_total_score_list[next_index][1]
+        return player_total_score_list[random.randint(0,12)][1]
+        
 
     def getScoredActionList(self, whichPlayer, Enemy_Next_Action=None):
         """
@@ -256,111 +266,73 @@ class Player:
         State_Score_list
 
         """
+
+        # Check if using on ourside or predicting enemy
         if (whichPlayer == "player"):
             side = self.side
             prev_state = State(copy(self.play_dict), copy(self.throws_left),
                                 copy(self.enemy_throws_left), copy(side))
         else:
             if self.side == "upper":
-                side = "lower"
+                #Reverse throws_left and enemy_throws_left for enemy evaluation
+                prev_state = State(copy(self.play_dict), copy(self.enemy_throws_left),
+                                copy(self.throws_left), "lower")
             else:
-                side = "upper"
-            #Reverse throws_left and enemy_throws_left for enemy evaluation
-            prev_state = State(copy(self.play_dict), copy(self.enemy_throws_left),
-                                copy(self.throws_left), copy(side))
+                #Reverse throws_left and enemy_throws_left for enemy evaluation
+                prev_state = State(copy(self.play_dict), copy(self.enemy_throws_left),
+                                copy(self.throws_left), "upper")
+            
 
         action_list = get_all_valid_action(whichPlayer, prev_state)
-        # add enemy next action into state
+        next_state = prev_state
+        # add enemy next action into state, but do not calculate elimination
         if Enemy_Next_Action:
             next_state = add_next_action_to_play_dict(prev_state, "opponent", Enemy_Next_Action)
             #eliminate_and_update_board(next_state, prev_state.target_dict)
-        else:
-            next_state = prev_state
+            
         if (self.ANALYSIS_MODE):
             print("````````````````````````````````Enemy_Next_Action````````````````````````````````")
             print(Enemy_Next_Action)
             #input("asdasd")
+        # Get Score List
         Total_score_list = []
-        Aggresive_Score_list = []
-        Defense_Score_list = []
-        Punishment_Score_list = []
-        State_Score_list = []
-        Reward_list = []
-
-        total_score = 0
-        
         for action in action_list:
             scoring_dict = action_evaluation(whichPlayer, next_state, action)
-            #Total:
             total_score = scoring_dict["total_score"]
-            Total_score_list.append( (total_score, action) )
-            #Aggresive:
-            agg_score = scoring_dict["aggresive_score"]
-            Aggresive_Score_list.append( (agg_score, action) )
-            #Defensive:
-            defense_score = scoring_dict["defense_score"]
-            Defense_Score_list.append( (defense_score, action) )
-            #Punishment:
-            punishment_score = scoring_dict["punishment_score"]
-            Punishment_Score_list.append( (punishment_score, action) )
-            #StateScore:
-            state_score = scoring_dict["state_score"]
-            State_Score_list.append( (state_score, action) )
-            #reWard_list
-            reward = scoring_dict["reward_list"]
-            Reward_list.append( (total_score, action, reward) )
-            
-
+            reward = scoring_dict["reward_list"]#reWard_list
+            Total_score_list.append( (total_score, action, reward) )
+        # Sort to choose highest score
         Total_score_list = sorted(Total_score_list, reverse=True)
-        Aggresive_Score_list_list = sorted(Aggresive_Score_list, reverse=True)
-        Defense_Score_list = sorted(Defense_Score_list, reverse=True)
-        Punishment_Score_list = sorted(Punishment_Score_list, reverse=False)
-        State_Score_list = sorted(State_Score_list, reverse=True)
-        Reward_list = sorted(Reward_list, reverse=True)
+
+        Total_score_list_with_prob = []
+        for i in range(0,len(Total_score_list)):
+            prob = calculate_normal_probability(i, self.opponent_score_array)
+            Total_score_list_with_prob.append(tuple((Total_score_list[i][0], Total_score_list[i][1], prob, Total_score_list[i][2]))) 
+            
 
         print(whichPlayer+" Best Score List:")
         #print(Reward_list[0])
-
-        return Total_score_list, Aggresive_Score_list, Defense_Score_list, Punishment_Score_list, State_Score_list
+        return Total_score_list_with_prob
 
 
     def select_enemy_next_index(self):
-        selected_score = 0
+        """select most likely enemy's action"""
         selected_index = 0
-        df = self.opponent_score_df
+        array = self.opponent_score_array
         # Select The Score we want to use to evaluate enemy's action
         # Selecting Least Standard Deviation one
-        if df.isnull:
-            selected_mean = 0
+        if np.size(array)==1:
+            selected_index = 0
         else:
-            min_std = min(df.std())
-            if (self.USE_TOTAL_SCORE_PREDICTION):
-                selected_score = 0
-                selected_mean = df.loc[:,"Total_Score_Index"].mean().astype(int)
-                # if select 0 std deviation use default total_score mean
-                if min_std == 0:
-                    selected_mean = df.loc[:,"Total_Score_Index"].mean().astype(int)
-                    selected_score = 0
-                else:
-                    selected_enemy_score_df = df.loc[:,(df.std()==min_std)]
-                    if (len(selected_enemy_score_df.columns)>1):
-                        # use first column if multiple column have same std
-                        selected_enemy_score_df = selected_enemy_score_df.iloc[:,0]
-                    selected_mean = selected_enemy_score_df.mean().astype(int)
-                    for name in self.score_names:
-                        if df[name].std()==min_std:
-                            selected_score = self.score_names.index(name)  # find smallest std score name 
-            print(selected_mean)            
+            selected_mean = np.sum(array)
             selected_index = int(round(selected_mean))
         if (self.ANALYSIS_MODE):
             print("``````````````````````````````````````````")
-            print("selected_score name")
-            print(str(selected_score))
             print("selected_enemy_index")
             print(selected_index)
             print("``````````````````````````````````````````")
             #input("asd")
-        return selected_score, selected_index
+        return selected_index
 
 
    
@@ -368,53 +340,35 @@ class Player:
     # count enemy's choices index based on our function into dataframe
     def update_enemy_index_count_dataframe(self, opponent_action):
         #iterate through all types of score
-        score_index = 0
+        score_array = self.opponent_score_array
+        index_to_add = 0
+        # Ignore First few rounds
         if self.game_round < self.IGNORE_ROUND-2:
             return
-
-        score_row =[]
-        for score_list in self.opponent_action_score_list:
-            cur_score_name = self.score_names[score_index] #store which score are we looking at
-            index=0  #Enemy Selection's index
-            for pair in score_list:
-                # Match an action, get its index
-                if pair[1] == opponent_action:
-                    # exclude potation random throw outlier
-                    if self.EXCLUDE_THROW_DIST == True:
-                        if pair[1][0] in "THROW":
-                            # if is a throw, impute mean value
-                            index = self.opponent_score_df[cur_score_name].mean()
-                            break
-                    break
-                index+=1
-            # print(self.enemy_action_dist_dict)
-            # print(calculate_normal_probability(index, self.enemy_action_dist_dict[cur_score_name]))
-            # input("asdas")
-
-             # not enough data, add directly
-            if (len(self.opponent_score_df[cur_score_name])<30):
-                score_row.append(index)
-            else:
-                #Excluding Potential Outlier and add index to dataframe's column
-                if calculate_normal_probability(index, self.enemy_action_dist_dict[cur_score_name]) > (1-self.CONFIDENCE_LEVEL*5):
-                    score_row.append(index)
-                else:
-                    score_row.append(self.opponent_score_df[cur_score_name].mean())
-            score_index += 1
+        score_list = self.opponent_action_score_list
         
-        #updating dataframe
-        if (self.opponent_action_score_list):
-            self.opponent_score_df = self.opponent_score_df.append({"Total_Score_Index":score_row[0],
-                                            "Aggresive_Index":score_row[1],
-                                            "Defense_Index":score_row[2],
-                                            "Punishment_Index":score_row[3],
-                                            "State_Score_Index":score_row[4]},ignore_index=True) 
+        for index in range(0, len(score_list)):
+            cur_pair = self.opponent_action_score_list[index]
+            print(cur_pair)
+            if cur_pair[1] == opponent_action:
+                # exclude potation random throw outlier, using mean value
+                if self.EXCLUDE_THROW_DIST == True:
+                    if cur_pair[1][0] in "THROW":
+                        index = self.opponent_score_array.mean()
+                        break
+                break
+        # not enough data, add mean value
+        if (np.size(score_array)<30):
+            index_to_add = index
+        else:
+            #Excluding Potential Outlier and add mean value
+            if calculate_normal_probability(index, score_array) > (1-self.CONFIDENCE_LEVEL*5):
+                index_to_add = index
+            else:
+                index_to_add = score_array.mean()
+        # add to action array
+        self.opponent_score_array = np.append(score_array, index)
 
-        # Updating Distribution
-        for name in self.score_names:
-            self.enemy_action_dist_dict[name]["mean"] = self.opponent_score_df[name].mean()
-            if (len(self.opponent_score_df[name]) > self.IGNORE_ROUND):
-                self.enemy_action_dist_dict[name]["std"] = self.opponent_score_df[name].std()
 
 
 def open_game_stragety(self):

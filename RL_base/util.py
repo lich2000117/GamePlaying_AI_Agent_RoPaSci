@@ -1,12 +1,19 @@
 import scipy.stats
-def calculate_normal_probability(value, dist_dict):
+import numpy as np
+
+
+def calculate_normal_probability(value, array):
     '''
     Remove outlier index since they may be random generated
     Using Normal Distribution Formula to calculate Probability
     '''
-    prob = scipy.stats.norm(dist_dict["mean"], dist_dict["std"]).cdf(value)
-    prob = abs(prob-(1-prob))
-    return 1-prob
+    std = np.std(array)
+    if not std:
+        return 0
+    else:
+        prob = scipy.stats.norm(np.mean(array), std).cdf(value)
+        prob = abs(prob-(1-prob))
+        return 1-prob
 
 
 

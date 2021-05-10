@@ -1,7 +1,7 @@
-from RL_base.state_evaluation import board_count, hostile_token_in_throw_range, token_in_enemy_throw_range
-from RL_base.state_evaluation import token_on_board, enemy_token_on_board
-from RL_base.state_evaluation import mean_distance_to_attack, min_distance_to_attack, mean_distance_to_defense, min_distance_to_defense
-from RL_base.state_evaluation import state_evaluation
+from RL.state_evaluation import board_count, hostile_token_in_throw_range, token_in_enemy_throw_range
+from RL.state_evaluation import token_on_board, enemy_token_on_board
+from RL.state_evaluation import mean_distance_to_attack, min_distance_to_attack, mean_distance_to_defense, min_distance_to_defense
+from RL.state_evaluation import state_evaluation
 from math import tanh, cosh, sinh
 
 def temporal_difference_learning(states_list, w, beta):

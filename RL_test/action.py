@@ -1,6 +1,6 @@
 # def get_all_valid_action(state, whichPlayer= 'player', Throw = True):
 #     # state =  (play_dict, player's throws left, opponnet's throws left, player's side)
-from RL_base.util import action_throw, move_action, least_distance, get_six_adj_nodes, is_point_valid
+from RL_test.util import action_throw, move_action, least_distance, get_six_adj_nodes, is_point_valid
 
 def get_all_valid_action(player, state):
     # state =  (play_dict, player's throws left, opponnet's throws left, player's side)

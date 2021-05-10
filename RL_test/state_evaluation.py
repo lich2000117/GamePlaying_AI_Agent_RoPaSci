@@ -1,6 +1,6 @@
 import numpy as np
-from RL_base.state import State, isGameEnded
-from RL_base.util import get_symbol_by_location, closest_one, least_distance
+from RL_test.state import State, isGameEnded
+from RL_test.util import get_symbol_by_location, closest_one, least_distance
 from math import tanh
 import os
 import csv
