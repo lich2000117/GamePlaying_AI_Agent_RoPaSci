@@ -3,15 +3,16 @@ from copy import deepcopy
 from RL_base.state import State
 from RL_base.util import get_symbol_by_location, least_distance, closest_one, get_current_player_nodes_count
 
-def action_evaluation(whichPlayer,state, action):
+def action_evaluation(playerClass, whichPlayer,state, action):
     # state = (play_dict, player's throw left, opponnet's throw left, player's side)
     # action = ("SLIDE",start, end) or ("SWING",start, end) or ("THROW",symbol_type, point)
     """this function returns a score that equals
             Score = value_of_action + value_of_postAction_state"""
-
+            
     AGGRESIVE_WEIGHT = 1
     DEFENSIVE_WEIGHT = 1
     PUNISHMENT_WEIGHT = 1
+    
 
 
     
@@ -49,6 +50,9 @@ def action_evaluation(whichPlayer,state, action):
     else:
         ourPlayer = "opponent"
         opponent = "player"
+        AGGRESIVE_WEIGHT = playerClass.Enemy_Eval_Weight["aggresive"]
+        DEFENSIVE_WEIGHT = playerClass.Enemy_Eval_Weight["defensive"]
+        PUNISHMENT_WEIGHT = playerClass.Enemy_Eval_Weight["other"]
 
     target_dict = {'r':'s', 'p':'r', 's':'p'}
     # evaluation of action

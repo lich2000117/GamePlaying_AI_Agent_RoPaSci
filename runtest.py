@@ -9,8 +9,8 @@ from io import StringIO
 
 # config --------------------------------------------------------------------------------------
 PLAY_TIMES = 10   # Match Times
-UPPER_LIST = ['RL'] 
-LOWER_LIST = ['RandomEnemy','GreedyEnemy','IG','RL','RLNOTUNE'] 
+UPPER_LIST = ['RL_base'] 
+LOWER_LIST = ['RandomEnemy','GreedyEnemy','IG','RL','RL_base'] 
 SHOW_BUG_MATCH = True  # show match detail of a bugged match
 SHOW_TIMEOUT_MATCH = False  # show match detail of a timed out match
 # config --------------------------------------------------------------------------------------

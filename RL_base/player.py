@@ -39,6 +39,16 @@ class Player:
         self.IGNORE_ROUND = 5  # ignore first 5 rounds when doing probability predicting
         self.beta = 0.01
         self.episilon = 0.3
+        
+        self.Enemy_Eval_Weight = {
+            "aggresive":1,
+            "defensive":1,
+            "other":1
+        }
+        self.STEP_SCALE = 0.1
+        
+        self.enemy_aggresive_action_score = {}
+        self.enemy_defensive_action_score = {}
 
         self.game_round = 1
         self.throws_left = 9   # reduced by 1 after each throw in util/add_action_board function
@@ -141,10 +151,8 @@ class Player:
         The parameter opponent_action is the opponent's chosen action,
         and player_action is this instance's latest chosen action.
         """
-        # count enemy's choices index based on our function into array
-        if (self.game_round > self.IGNORE_ROUND):
-            self.update_accuracy_of_prediction(opponent_action)
-            self.record_enemy_action_index(opponent_action)
+        self.LearnEnemyStrategy(opponent_action)
+        
 
         # do not calculate elimination now, just update symbols to play_dict
         # add each player's action to board for the reason of synchronising play.
@@ -201,6 +209,9 @@ class Player:
                     print(round(self.corrected_predict/self.total_predict,3))
                 print("\nMake Prediction Percentage:")
                 print(round(self.total_predict/self.game_round,3))
+                print("\nEnemy Weight:")
+                print(self.Enemy_Eval_Weight)
+                
                 # fig, ax = plt.subplots()
                 # dist.plot.hist(density=True, ax=ax)
                 # ax.set_ylabel('Probability')
@@ -227,6 +238,26 @@ class Player:
             self.throws_left,
             self.enemy_throws_left,
         )
+        
+        
+    def LearnEnemyStrategy(self, opponent_action):
+        """Learn Enemy's Strategy by comparing the arresive/defensive score and get their suitable evaluation function"""
+        # count enemy's choices index based on our function into array
+        if (self.game_round > self.IGNORE_ROUND):
+            self.update_accuracy_of_prediction(opponent_action)
+            self.record_enemy_action_index(opponent_action)
+            
+            # Adjust enemy evaluation weight according to prediction, reduce the weight if less
+            aggresive_difference = self.enemy_aggresive_action_score[opponent_action] > self.enemy_aggresive_action_score[self.predicted_enemy_action]
+            if aggresive_difference > 0:
+                self.Enemy_Eval_Weight["aggresive"] += self.STEP_SCALE * aggresive_difference
+            else:
+                self.Enemy_Eval_Weight["aggresive"] += self.STEP_SCALE * aggresive_difference
+            defensive_difference = self.enemy_defensive_action_score[opponent_action] > self.enemy_defensive_action_score[self.predicted_enemy_action]    
+            if defensive_difference > 0:
+                self.Enemy_Eval_Weight["defensive"] += self.STEP_SCALE * defensive_difference
+            else:
+                self.Enemy_Eval_Weight["defensive"] += self.STEP_SCALE * defensive_difference
 
 
     def update_accuracy_of_prediction(self, opponent_action):
@@ -313,10 +344,19 @@ class Player:
         # Get Score List
         Total_score_list = []
         for action in action_list:
-            scoring_dict = action_evaluation(whichPlayer, next_state, action)
+            scoring_dict = action_evaluation(self, whichPlayer, next_state, action)
             total_score = scoring_dict["total_score"]
             reward = scoring_dict["reward_list"]#reWard_list
             Total_score_list.append( (total_score, action, reward) )
+            # Aggresive Score dictionary
+            agg_score = scoring_dict["aggresive_score"]
+            self.enemy_aggresive_action_score[action] = agg_score
+            # Defensive Score dictionary
+            def_score = scoring_dict["defense_score"]
+            self.enemy_defensive_action_score[action] = def_score
+            
+            
+            
         # Sort to choose highest score
         Total_score_list = sorted(Total_score_list, reverse=True)
 
