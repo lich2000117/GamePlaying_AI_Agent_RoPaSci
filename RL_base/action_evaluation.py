@@ -265,11 +265,11 @@ def action_evaluation(playerClass, whichPlayer,state, action):
  
     total_score = AGGRESIVE_WEIGHT  *  aggresive_score + DEFENSIVE_WEIGHT  *  defense_score + PUNISHMENT_WEIGHT *  punishment_score + state_score
 
-    out_score_dict = {"total_score": total_score,
-                        "state_score": state_score,
-                        "aggresive_score": aggresive_score,
-                        "defense_score": defense_score,
-                        "punishment_score": punishment_score,
+    out_score_dict = {"total_score": round(total_score,3),
+                        "state_score": round(state_score,3),
+                        "aggresive_score": round(aggresive_score,3),
+                        "defense_score": round(defense_score,3),
+                        "punishment_score": round(punishment_score,3),
                         "reward_list": reward_list
                         }
     return out_score_dict
