@@ -1,13 +1,13 @@
-from RL.util import Init_throw_range, add_action_to_play_dict, eliminate_and_update_board, calculate_normal_probability, get_symbol_by_location
-from RL.action import get_all_valid_action
-from RL.action_evaluation import action_evaluation
-from RL.state import State
+from RL_base.util import Init_throw_range, add_action_to_play_dict, eliminate_and_update_board, calculate_normal_probability, get_symbol_by_location
+from RL_base.action import get_all_valid_action
+from RL_base.action_evaluation import action_evaluation
+from RL_base.state import State
 from copy import copy
 from copy import deepcopy
 import random
-from RL.random_algorithms import refined_random_throw, random_throw, random_action, get_current_player_nodes_count
+from RL_base.random_algorithms import refined_random_throw, random_throw, random_action, get_current_player_nodes_count
 import csv
-from RL.learning import temporal_difference_learning
+from RL_base.learning import temporal_difference_learning
 import os
 
 import pandas as pd

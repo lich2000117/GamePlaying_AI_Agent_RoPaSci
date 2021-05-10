@@ -1,16 +1,13 @@
-from RL.util import *
-from RL.action import get_all_valid_action
-from RL.action_evaluation import action_evaluation
-from RL.state import State
-from RL.random_algorithms import *
+from RL_base.util import Init_throw_range, add_action_to_play_dict, eliminate_and_update_board, calculate_normal_probability, get_symbol_by_location
+from RL_base.action import get_all_valid_action
+from RL_base.action_evaluation import action_evaluation
+from RL_base.state import State
 from copy import copy
 from copy import deepcopy
 import random
-
-from RL.random_algorithms import *
-from RL.random_algorithms import refined_random_throw, random_throw, random_action, get_current_player_nodes_count
+from RL_base.random_algorithms import refined_random_throw, random_throw, random_action, get_current_player_nodes_count
 import csv
-from RL.learning import temporal_difference_learning
+from RL_base.learning import temporal_difference_learning
 import os
 
 import pandas as pd
@@ -30,13 +27,16 @@ class Player:
         as Lower).
         """
         self.TEMPORAL_DIFF_LEARNING = False
-        self.GREEDY_PREDICT = True
+        self.USE_TOTAL_SCORE_PREDICTION = True
+        self.GREEDY_PREDICT = False
         self.EXCLUDE_THROW_DIST = True
-        self.ANALYSIS_MODE = True
+        self.ANALYSIS_MODE = False
         self.AVOID_DRAW = True   # if algorithm break tie automatically
         self.REFINED_THROW = True   # if using advanced random throw strategy
         self.CONFIDENCE_LEVEL = 0.05   #confidence level to exclude outliers into distribution
         self.IGNORE_ROUND = 5  # ignore first 5 rounds when doing probability predicting
+        self.beta = 0.01
+        self.episilon = 0.3
 
         self.game_round = 1
         self.throws_left = 9   # reduced by 1 after each throw in util/add_action_board function
@@ -69,6 +69,7 @@ class Player:
         self.predicted_enemy_action = ()
         self.corrected_predict = 0
         self.total_predict = 0
+        self.predict_accuracy = 0.0
         for name in self.score_names:
             self.enemy_action_dist_dict[name] = {"mean":0,"std":200}  #this dict store each score's distribution
         
@@ -87,44 +88,11 @@ class Player:
         Called at the beginning of each turn. Based on the current state
         of the game, select an action to play this turn.
         """
-        
         selected_score = 0
         selected_index = 0
-        # Get Enemy Action's Probability and index
+        # Get Enemy Action's Probability and return the mean index using "Total Score"
         if (self.game_round >= self.IGNORE_ROUND *2):
-            df = self.opponent_score_df
-            # Select The Score we want to use to evaluate enemy's action
-            # Selecting Least Standard Deviation one
-            if df.isnull:
-                selected_mean = 0
-            else:
-                min_std = min(df.std())
-                # if select 0 std deviation use default total_score mean
-                if min_std == 0:
-                    selected_mean = df.loc[:,"Total_Score_Index"].mean().astype(int)
-                    selected_std = df.loc[:,"Total_Score_Index"].std()
-                    selected_score = 0
-                else:
-                    selected_enemy_score_df = df.loc[:,(df.std()==min_std)]
-                    if (len(selected_enemy_score_df.columns)>1):
-                        # use first column if multiple column have same std
-                        selected_enemy_score_df = selected_enemy_score_df.iloc[:,0]
-                    selected_mean = selected_enemy_score_df.mean().astype(int)
-                    selected_std = selected_enemy_score_df.std()
-                    for name in self.score_names:
-                        if df[name].std()==min_std:
-                            selected_score = self.score_names.index(name)  # find smallest std score name 
-                print(selected_mean)            
-                selected_index = int(round(selected_mean))
-            if (self.ANALYSIS_MODE):
-                print("``````````````````````````````````````````")
-                print("selected_score name")
-                print(str(selected_score))
-                print("selected_enemy_index")
-                print(selected_index)
-                print("``````````````````````````````````````````")
-                #input("asd")
-
+            selected_score, selected_mean = self.select_enemy_next_index()
 
         # hard code the first three rounds to lay out my defensive 
         if self.game_round <= 3:
@@ -140,18 +108,15 @@ class Player:
                     next_enemy_action = self.opponent_action_score_list[selected_score][selected_index][1]
                 else:
                     next_enemy_action = self.opponent_action_score_list[0][0][1]
+                # always greedy predict enemy
                 if (self.GREEDY_PREDICT):
-                    # always greedy predict enemy
                     next_enemy_action = self.opponent_action_score_list[0][0][1]  
-
             
             # Get sorted Scored Action Evaluation List for us to choose
             self.predicted_enemy_action = next_enemy_action
             total, aggresive, defense, punish, state = self.getScoredActionList("player", next_enemy_action)
             player_score_list = [total, aggresive, defense, punish, state]
-            player_total_score_list = player_score_list[0]
-
-            
+            player_total_score_list = player_score_list[0]  
 
 
             # Avoid Draw Situation, take another action without using already used ones checked by default dict
@@ -219,14 +184,18 @@ class Player:
                     for num in row:
                         pre_w.append(float(num))
                 #print("Previous weight: ", pre_w)
-                update_w = temporal_difference_learning(self.states_list, pre_w) 
+                update_w = temporal_difference_learning(self.states_list, pre_w, self.beta) 
                 #print("Weights after update: ", update_w)                       
-                with open('protagonist.csv', 'w', newline='') as file:
+                with open('RL/weights.csv', 'w', newline='') as file:
                     writer = csv.writer(file)
                     writer.writerow(update_w)
 
 
         #input("\nPress enter to continue! ")
+
+        # Keep Track of prediction accuracy
+        if (self.total_predict):
+            self.predict_accuracy = round(self.corrected_predict/self.total_predict,3)
 
         # Take a snap of current game state and store it
         cur_snap = self._snap()
@@ -354,6 +323,44 @@ class Player:
 
         return Total_score_list, Aggresive_Score_list, Defense_Score_list, Punishment_Score_list, State_Score_list
 
+
+    def select_enemy_next_index(self):
+        selected_score = 0
+        selected_index = 0
+        df = self.opponent_score_df
+        # Select The Score we want to use to evaluate enemy's action
+        # Selecting Least Standard Deviation one
+        if df.isnull:
+            selected_mean = 0
+        else:
+            min_std = min(df.std())
+            if (self.USE_TOTAL_SCORE_PREDICTION):
+                selected_score = 0
+                selected_mean = df.loc[:,"Total_Score_Index"].mean().astype(int)
+                # if select 0 std deviation use default total_score mean
+                if min_std == 0:
+                    selected_mean = df.loc[:,"Total_Score_Index"].mean().astype(int)
+                    selected_score = 0
+                else:
+                    selected_enemy_score_df = df.loc[:,(df.std()==min_std)]
+                    if (len(selected_enemy_score_df.columns)>1):
+                        # use first column if multiple column have same std
+                        selected_enemy_score_df = selected_enemy_score_df.iloc[:,0]
+                    selected_mean = selected_enemy_score_df.mean().astype(int)
+                    for name in self.score_names:
+                        if df[name].std()==min_std:
+                            selected_score = self.score_names.index(name)  # find smallest std score name 
+            print(selected_mean)            
+            selected_index = int(round(selected_mean))
+        if (self.ANALYSIS_MODE):
+            print("``````````````````````````````````````````")
+            print("selected_score name")
+            print(str(selected_score))
+            print("selected_enemy_index")
+            print(selected_index)
+            print("``````````````````````````````````````````")
+            #input("asd")
+        return selected_score, selected_index
 
 
    
