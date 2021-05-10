@@ -125,7 +125,7 @@ class Player:
             #     # if no action, redo evaluation without enemy's action
             #     player_total_score_list = self.getScoredActionList("player", next_enemy_action)
         
-        input("asd")
+        #input("asd")
         return player_best_action
             
 

@@ -32,7 +32,7 @@ class Player:
         self.USE_TOTAL_SCORE_PREDICTION = True
         self.GREEDY_PREDICT = False
         self.EXCLUDE_THROW_DIST = True
-        self.ANALYSIS_MODE = False
+        self.ANALYSIS_MODE = True
         self.AVOID_DRAW = True   # if algorithm break tie automatically
         self.REFINED_THROW = True   # if using advanced random throw strategy
         self.CONFIDENCE_LEVEL = 0.05   #confidence level to exclude outliers into distribution
@@ -84,6 +84,7 @@ class Player:
 
 
     def action(self):
+        
         """
         Called at the beginning of each turn. Based on the current state
         of the game, select an action to play this turn.
@@ -94,24 +95,24 @@ class Player:
         next_enemy_action = None
         # hard code the first three rounds to lay out my defensive 
         if self.game_round <= 3:
-            return open_game_stragety(self)
+            player_best_action = open_game_stragety(self)
         else:
-            # Get sorted Action Evaluation List for Enemy's choice
-            self.opponent_action_score_list = self.getScoredActionList("opponent")
-            # print(self.opponent_action_score_list)
-            # input("asd")
-            if (self.opponent_action_score_list) and (self.game_round >= self.IGNORE_ROUND *2):
-                predict_index = self.select_enemy_next_index()
-                #using Total Score List
-                #for i in range(1,len(self.opponent_action_score_list)):
-                    #self.opponent_action_score_list[0][i] = tuple(list(self.opponent_action_score_list[i]).append(self.calculate_probability(i)))
-                # update enemy's action probability list
-                #self.opponent_action_list_with_prob = self.opponent_action_score_list
-                self.update_next_enemy_action(predict_index)   # update enemy's next action into player class
+            ### ---------------Prediction
 
+            
+            #after certain rounds, start to predict
+            if (self.game_round>self.IGNORE_ROUND):
+            # Get sorted Action Evaluation List for Enemy's choice
+                self.opponent_action_score_list = self.getScoredActionList("opponent")
+            #if (self.opponent_action_score_list):
+                predict_index = self.select_enemy_next_index()
+                self.predicted_enemy_action = self.update_next_enemy_action(predict_index)   
+                assert(self.predicted_enemy_action!=None)
+            ### ----------------Choose Best Step For Our Player
             # Get sorted Scored Action Evaluation List for us to choose
             player_total_score_list = self.getScoredActionList("player", self.predicted_enemy_action)
-
+            
+            
             # Check Repeated State
             # Avoid Draw Situation, take another action without using already used indexes checked by default dict
             cur_snap = self._snap()
@@ -119,11 +120,13 @@ class Player:
                 player_best_action = self.draw_avoid_best_action(player_total_score_list, cur_snap)
             else:
                 player_best_action = player_total_score_list[0][1]
+            
             # if not player_best_action:
             #     # if no action, redo evaluation without enemy's action
             #     player_total_score_list = self.getScoredActionList("player", next_enemy_action)
-            
-            return player_best_action
+        
+        #input("asd")
+        return player_best_action
             
 
         
@@ -136,11 +139,10 @@ class Player:
         The parameter opponent_action is the opponent's chosen action,
         and player_action is this instance's latest chosen action.
         """
-        self.update_accuracy_of_prediction(opponent_action)
-        
         # count enemy's choices index based on our function into array
         if (self.game_round > self.IGNORE_ROUND):
-            self.update_enemy_index_count_dataframe(opponent_action)
+            self.update_accuracy_of_prediction(opponent_action)
+            self.record_enemy_action_index(opponent_action)
 
         # do not calculate elimination now, just update symbols to play_dict
         # add each player's action to board for the reason of synchronising play.
@@ -240,9 +242,10 @@ class Player:
         else:
             # hard coding, get Next Enemy Action without using probability
             if (len(self.opponent_action_score_list) > predict_index):
-                self.predicted_enemy_action = self.opponent_action_score_list[predict_index][1]
+                predicted_enemy_action = self.opponent_action_score_list[predict_index][1]
             else:
-                self.predicted_enemy_action = self.opponent_action_score_list[0][1]
+                predicted_enemy_action = self.opponent_action_score_list[0][1]
+        return predicted_enemy_action
 
     def draw_avoid_best_action(self, player_total_score_list, cur_snap):
         """Avoid Draw Situation, take another action without using already used indexes checked by default dict"""
@@ -290,10 +293,9 @@ class Player:
             next_state = add_next_action_to_play_dict(prev_state, "opponent", Enemy_Next_Action)
             #eliminate_and_update_board(next_state, prev_state.target_dict)
             
-        if (self.ANALYSIS_MODE):
+        if ((self.ANALYSIS_MODE) and (whichPlayer == "player")):
             print("````````````````````````````````Enemy_Next_Action````````````````````````````````")
             print(Enemy_Next_Action)
-            #input("asdasd")
         # Get Score List
         Total_score_list = []
         for action in action_list:
@@ -310,7 +312,7 @@ class Player:
             Total_score_list_with_prob.append(tuple((Total_score_list[i][0], Total_score_list[i][1], prob, Total_score_list[i][2]))) 
             
 
-        print(whichPlayer+" Best Score List:")
+        #print(whichPlayer+" Best Score List:")
         #print(Reward_list[0])
         return Total_score_list_with_prob
 
@@ -324,32 +326,27 @@ class Player:
         if np.size(array)==1:
             selected_index = 0
         else:
-            selected_mean = np.sum(array)
+            selected_mean = np.mean(array)
             selected_index = int(round(selected_mean))
         if (self.ANALYSIS_MODE):
             print("``````````````````````````````````````````")
             print("selected_enemy_index")
             print(selected_index)
             print("``````````````````````````````````````````")
-            #input("asd")
         return selected_index
 
 
    
     
     # count enemy's choices index based on our function into dataframe
-    def update_enemy_index_count_dataframe(self, opponent_action):
+    def record_enemy_action_index(self, opponent_action):
         #iterate through all types of score
         score_array = self.opponent_score_array
         index_to_add = 0
-        # Ignore First few rounds
-        if self.game_round < self.IGNORE_ROUND-2:
-            return
         score_list = self.opponent_action_score_list
         
         for index in range(0, len(score_list)):
             cur_pair = self.opponent_action_score_list[index]
-            print(cur_pair)
             if cur_pair[1] == opponent_action:
                 # exclude potation random throw outlier, using mean value
                 if self.EXCLUDE_THROW_DIST == True:
