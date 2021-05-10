@@ -104,26 +104,30 @@ class Player:
             if (self.game_round > self.IGNORE_ROUND):
             # Get sorted Action Evaluation List for Enemy's choice
                 self.opponent_action_score_list = getScoredActionList(self, "opponent")
+        
+                #[(Score,  Action,  Probability,  Reward Explanation), (.......)]
+                #[(14, (THROW, xxx), 0.72, ("Reward Explanation")), (), ()]
+                
                 predict_index = select_enemy_next_index(self)
-                self.predicted_enemy_action = self.update_next_enemy_action(predict_index)   
+                self.predicted_enemy_action = update_next_enemy_action(self,predict_index)   
                 assert(self.predicted_enemy_action!=None)
 
             ### ----------------Choose Best Step For Our Player
             # Get sorted Scored Action Evaluation List for us to choose
-            player_total_score_list = self.getScoredActionList("player", self.predicted_enemy_action)
+            player_total_score_list = getScoredActionList(self, "player", self.predicted_enemy_action)
             
             
             # Check Repeated State
             # Avoid Draw Situation, take another action without using already used indexes checked by default dict
             cur_snap = self._snap()
             if (self.history[cur_snap] >= 2 and self.AVOID_DRAW):
-                player_best_action = self.draw_avoid_best_action(player_total_score_list, cur_snap)
+                player_best_action = draw_avoid_best_action(self, player_total_score_list, cur_snap)
             else:
                 player_best_action = player_total_score_list[0][1]
             
             # return best action, if no action, do evaluation without enemy's action
             if len(player_total_score_list) < 1:
-                player_total_score_list = self.getScoredActionList("player", next_enemy_action)
+                player_total_score_list = getScoredActionList(self, "player", next_enemy_action)
             else:
                 die_num = random.uniform(0, 1)
                 if die_num <= self.episilon:
@@ -146,8 +150,8 @@ class Player:
         """
         # count enemy's choices index based on our function into array
         if (self.game_round > self.IGNORE_ROUND):
-            self.update_accuracy_of_prediction(opponent_action)
-            self.record_enemy_action_index(opponent_action)
+            update_accuracy_of_prediction(self,opponent_action)
+            record_enemy_action_index(self, opponent_action)
 
         # do not calculate elimination now, just update symbols to play_dict
         # add each player's action to board for the reason of synchronising play.
@@ -247,31 +251,4 @@ def open_game_stragety(self):
             return ("THROW", "s", (-3, 1))
 
 
-def add_next_action_to_play_dict(state, player, action):
-    """
-    This function copy the previous state and add action on the new board and return the new
-    state 
-    """
-    # copy the previous state
-    new_state = deepcopy(state)
 
-    if action[0] in "THROW":
-        #If throw, add a symbol onto board
-        symbol_type = action[1]
-        location = action[2]
-        new_state.play_dict[player][symbol_type].append(location)
-        #reduce available throw times by 1
-        if player == "opponent":
-            new_state.enemy_throws_left -= 1
-        else:
-            new_state.throws_left -= 1
-    else:
-        move_from = action[1]
-        symbol_type = get_symbol_by_location(player, new_state.play_dict, move_from)
-        move_to = action[2]
-        # move token from start to end, simply update play_dict
-
-        # move the token by adding new position and remove old one
-        new_state.play_dict[player][symbol_type].remove(move_from)
-        new_state.play_dict[player][symbol_type].append(move_to)
-    return new_state
