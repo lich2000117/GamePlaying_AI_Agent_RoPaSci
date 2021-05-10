@@ -1,7 +1,7 @@
-from RL.util import *
 from RL.state_evaluation import state_evaluation
 from copy import deepcopy
 from RL.state import State
+from RL.util import get_symbol_by_location, least_distance, closest_one, get_current_player_nodes_count
 
 def action_evaluation(whichPlayer,state, action):
     # state = (play_dict, player's throw left, opponnet's throw left, player's side)

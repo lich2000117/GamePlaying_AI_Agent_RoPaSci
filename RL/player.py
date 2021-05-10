@@ -1,13 +1,10 @@
-from RL.util import *
+from RL.util import Init_throw_range, add_action_to_play_dict, eliminate_and_update_board, calculate_normal_probability, get_symbol_by_location
 from RL.action import get_all_valid_action
 from RL.action_evaluation import action_evaluation
 from RL.state import State
-from RL.random_algorithms import *
 from copy import copy
 from copy import deepcopy
 import random
-
-from RL.random_algorithms import *
 from RL.random_algorithms import refined_random_throw, random_throw, random_action, get_current_player_nodes_count
 import csv
 from RL.learning import temporal_difference_learning
@@ -36,6 +33,8 @@ class Player:
         self.REFINED_THROW = True   # if using advanced random throw strategy
         self.CONFIDENCE_LEVEL = 0.05   #confidence level to exclude outliers into distribution
         self.IGNORE_ROUND = 5  # ignore first 5 rounds when doing probability predicting
+        self.beta = 0.01
+        self.episilon = 0.3
 
         self.game_round = 1
         self.throws_left = 9   # reduced by 1 after each throw in util/add_action_board function
@@ -203,9 +202,9 @@ class Player:
                     for num in row:
                         pre_w.append(float(num))
                 #print("Previous weight: ", pre_w)
-                update_w = temporal_difference_learning(self.states_list, pre_w) 
+                update_w = temporal_difference_learning(self.states_list, pre_w, self.beta) 
                 #print("Weights after update: ", update_w)                       
-                with open('protagonist.csv', 'w', newline='') as file:
+                with open('RL/weights.csv', 'w', newline='') as file:
                     writer = csv.writer(file)
                     writer.writerow(update_w)
 
