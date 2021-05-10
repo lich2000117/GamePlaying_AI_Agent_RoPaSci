@@ -5,11 +5,11 @@ from math import tanh
 import os
 import csv
 
-def state_evaluation(state):
+def state_evaluation(state, txt = False):
 
-    WINNING_REWARD = 999
-    DRAW_REWARD = -100
-
+    WINNING_REWARD = 99
+    DRAW_REWARD = -10
+    w = []
     # state is in the form of (play_dict, player's throw left, opponnet's throw left, player's side)
     # isGameEnded(state) returns (True, "Winner") or (True, "Loser") or (False, "Unknown")
     if isGameEnded(state)[0]:
@@ -21,7 +21,6 @@ def state_evaluation(state):
         else:
             return -WINNING_REWARD
     else:
-        return 0
         # if false, do evaluation of the state, and return the state_score
         # if the file is empty, use the initial parameter
         if os.stat("RL/weights.csv").st_size == 0:
@@ -30,27 +29,28 @@ def state_evaluation(state):
             with open("RL/weights.csv") as csv_file:
                 csv_reader = csv.reader(csv_file, delimiter=',')
                 row = next(csv_reader)
-                w = []
+                # print("csv: ", row)
                 for num in row:
                     w.append(float(num))
 
-        feature_array = np.array([])                                    # initial parameter
-        np.append(feature_array, board_count(state))                    # 10
-        np.append(feature_array, hostile_token_in_throw_range(state))   # 5
-        np.append(feature_array, token_in_enemy_throw_range(state))     # -5
-        np.append(feature_array, token_on_board(state))                 # 1
-        np.append(feature_array, enemy_token_on_board(state))           # -1
-        np.append(feature_array, 10/mean_distance_to_attack(state))     # 2
-        np.append(feature_array, min_distance_to_attack(state))         # 3
-        np.append(feature_array, 10/mean_distance_to_defense(state))    # -2  
-        np.append(feature_array, min_distance_to_defense(state))        # -3
+        feature_array = []                                   # initial parameter
+        feature_array.append(board_count(state))                    # 10
+        feature_array.append(hostile_token_in_throw_range(state))   # 5
+        feature_array.append(token_in_enemy_throw_range(state))     # -5
+        feature_array.append(token_on_board(state))                 # 1
+        feature_array.append(enemy_token_on_board(state))           # -1
+        feature_array.append(mean_distance_to_attack(state))        # -2
+        feature_array.append(min_distance_to_attack(state))         # 3
+        feature_array.append(mean_distance_to_defense(state))       # 5  
+        feature_array.append(min_distance_to_defense(state))        # -3
 
-        
-        W = np.array([])
-        for i in range(0, len(feature_array)):
-            np.append(W, w[i])
-        
-        return feature_array.dot(W)
+        state_value = 0
+        if txt == True:
+            print("w:", w)
+            print("feature array: ", feature_array)
+        for i in range(0, len(w)):
+            state_value += feature_array[i] * w[i]
+        return state_value
     
 
 def board_count(state):
@@ -106,12 +106,17 @@ def mean_distance_to_attack(state):
         # a list of token pos that we can eat
         target_list = state.play_dict["opponent"][target_type]
         if target_list:
-            # find the the token that is closest to our token
-            target_pos = closest_one(token_pos, target_list)
-            sum_distance += least_distance(target_pos, token_pos)
+            sub_count = 0
+            sub_sum_distance = 0
+            for target_pos in target_list:
+                sub_sum_distance += least_distance(token_pos, target_pos)
+                sub_count += 1
+            sum_distance += sub_sum_distance / sub_count
             count += 1
-
-    return sum_distance/count
+    if count:
+        return sum_distance/count
+    else:
+        return 0
 
 
 def min_distance_to_attack(state):
@@ -145,12 +150,17 @@ def mean_distance_to_defense(state):
         # a list of token pos that we can eat
         counter_list = state.play_dict["opponent"][counter_type]
         if counter_list:
-            # find the the token that is closest to our token
-            counter_pos = closest_one(token_pos, counter_list)
-            sum_distance += least_distance(counter_pos, token_pos)
+            sub_count = 0
+            sub_sum_distance = 0
+            for counter_pos in counter_list:
+                sub_sum_distance += least_distance(token_pos, counter_pos)
+                sub_count += 1
+            sum_distance += sub_sum_distance / sub_count
             count += 1
-
-    return sum_distance/count
+    if count:
+        return sum_distance/count
+    else:
+        return 0
 
 
 def min_distance_to_defense(state):

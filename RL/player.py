@@ -28,7 +28,7 @@ class Player:
         play as Upper), or the string "lower" (if the instance will play
         as Lower).
         """
-        self.TEMPORAL_DIFF_LEARNING = False
+        self.TEMPORAL_DIFF_LEARNING = True
         self.USE_TOTAL_SCORE_PREDICTION = True
         self.GREEDY_PREDICT = False
         self.EXCLUDE_THROW_DIST = True
@@ -37,8 +37,8 @@ class Player:
         self.REFINED_THROW = True   # if using advanced random throw strategy
         self.CONFIDENCE_LEVEL = 0.05   #confidence level to exclude outliers into distribution
         self.IGNORE_ROUND = 5  # ignore first 5 rounds when doing probability predicting
-        self.beta = 0.01
-        self.episilon = 0.3
+        self.beta = 0.2
+        self.episilon = 0.1
 
         self.game_round = 1
         self.throws_left = 9   # reduced by 1 after each throw in util/add_action_board function
@@ -121,12 +121,26 @@ class Player:
             else:
                 player_best_action = player_total_score_list[0][1]
             
+<<<<<<< Updated upstream
             # if not player_best_action:
             #     # if no action, redo evaluation without enemy's action
             #     player_total_score_list = self.getScoredActionList("player", next_enemy_action)
         
         #input("asd")
         return player_best_action
+=======
+            # return best action, if no action, do evaluation without enemy's action
+            if len(player_total_score_list) < 1:
+                player_total_score_list = self.getScoredActionList("player", next_enemy_action)
+            else:
+                die_num = random.uniform(0, 1)
+                if die_num <= self.episilon:
+                    return random.choice(get_all_valid_action("player", self.states_list[-1]))
+                else:
+                    return player_total_score_list[0][1]
+
+                
+>>>>>>> Stashed changes
             
 
         
@@ -155,6 +169,7 @@ class Player:
         eliminate_and_update_board(self,self.target_dict)
 
 
+<<<<<<< Updated upstream
         if ((self.TEMPORAL_DIFF_LEARNING==True)):
             # store state into a file 
             new_state = State(copy(self.play_dict), copy(self.throws_left),
@@ -178,6 +193,32 @@ class Player:
                         writer = csv.writer(file)
                         writer.writerow(update_w)
         
+=======
+        if (self.game_round >= 4) and (self.TEMPORAL_DIFF_LEARNING==True):
+            if os.stat("RL/weights.csv").st_size == 0:
+                pre_w = [10, 5, -5, 1, -1, 2, 3, -2, -3]
+            else:
+                with open("RL/weights.csv") as csv_file:
+                    csv_reader = csv.reader(csv_file, delimiter=',')
+                    row = next(csv_reader)
+                    pre_w = []
+                    for num in row:
+                        pre_w.append(float(num))
+                print("Previous weight: ", pre_w)
+                update_w = temporal_difference_learning(self.states_list, pre_w, self.beta) 
+                print("Weights after update: ", update_w)   
+                input("Press enter to continue!")                    
+                with open('RL/weights.csv', 'w', newline='') as file:
+                    writer = csv.writer(file)
+                    writer.writerow(update_w)
+
+
+        #input("\nPress enter to continue! ")
+
+        # Keep Track of prediction accuracy
+        if (self.total_predict):
+            self.predict_accuracy = round(self.corrected_predict/self.total_predict,3)
+>>>>>>> Stashed changes
 
         # Take a snap of current game state and store it
         cur_snap = self._snap()
