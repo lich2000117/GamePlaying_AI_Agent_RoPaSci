@@ -30,6 +30,7 @@ class Player:
         as Lower).
         """
         self.TEMPORAL_DIFF_LEARNING = False
+        self.GREEDY_PREDICT = True
         self.EXCLUDE_THROW_DIST = True
         self.ANALYSIS_MODE = True
         self.AVOID_DRAW = True   # if algorithm break tie automatically
@@ -65,6 +66,9 @@ class Player:
         self.score_names = ["Total_Score_Index", "Aggresive_Index", "Defense_Index", "Punishment_Index", "State_Score_Index"]
         self.opponent_score_df = pd.DataFrame(columns=self.score_names)
         self.enemy_action_dist_dict = {}
+        self.predicted_enemy_action = ()
+        self.corrected_predict = 0
+        self.total_predict = 0
         for name in self.score_names:
             self.enemy_action_dist_dict[name] = {"mean":0,"std":200}  #this dict store each score's distribution
         
@@ -112,13 +116,14 @@ class Player:
                             selected_score = self.score_names.index(name)  # find smallest std score name 
                 print(selected_mean)            
                 selected_index = int(round(selected_mean))
-            print("``````````````````````````````````````````")
-            print("selected_score name")
-            print(str(selected_score))
-            print("selected_enemy_index")
-            print(selected_index)
-            print("``````````````````````````````````````````")
-            #input("asd")
+            if (self.ANALYSIS_MODE):
+                print("``````````````````````````````````````````")
+                print("selected_score name")
+                print(str(selected_score))
+                print("selected_enemy_index")
+                print(selected_index)
+                print("``````````````````````````````````````````")
+                #input("asd")
 
 
         # hard code the first three rounds to lay out my defensive 
@@ -135,10 +140,13 @@ class Player:
                     next_enemy_action = self.opponent_action_score_list[selected_score][selected_index][1]
                 else:
                     next_enemy_action = self.opponent_action_score_list[0][0][1]
-                next_enemy_action = self.opponent_action_score_list[0][0][1]  # always greedy
+                if (self.GREEDY_PREDICT):
+                    # always greedy predict enemy
+                    next_enemy_action = self.opponent_action_score_list[0][0][1]  
 
             
             # Get sorted Scored Action Evaluation List for us to choose
+            self.predicted_enemy_action = next_enemy_action
             total, aggresive, defense, punish, state = self.getScoredActionList("player", next_enemy_action)
             player_score_list = [total, aggresive, defense, punish, state]
             player_total_score_list = player_score_list[0]
@@ -171,6 +179,14 @@ class Player:
         The parameter opponent_action is the opponent's chosen action,
         and player_action is this instance's latest chosen action.
         """
+
+        # Get the accuracy of our prediction
+        if self.predicted_enemy_action:
+            self.total_predict += 1
+            if (self.predicted_enemy_action == opponent_action):
+                self.corrected_predict += 1
+                
+
         # count enemy's choices index based on our function into dataframe
         if (self.game_round > self.IGNORE_ROUND):
             self.update_enemy_index_count_dataframe(opponent_action)
@@ -227,6 +243,11 @@ class Player:
             print(dist.mean())
             print("\n Enemy Index STD:")
             print(dist.std())
+            print("\nAccuracy of Prediction:")
+            if self.total_predict:
+                print(round(self.corrected_predict/self.total_predict,3))
+            print("\nMake Prediction Percentage:")
+            print(round(self.total_predict/self.game_round,3))
             # fig, ax = plt.subplots()
             # dist.plot.hist(density=True, ax=ax)
             # ax.set_ylabel('Probability')
@@ -286,9 +307,10 @@ class Player:
             #eliminate_and_update_board(next_state, prev_state.target_dict)
         else:
             next_state = prev_state
-        print("````````````````````````````````Enemy_Next_Action````````````````````````````````")
-        print(Enemy_Next_Action)
-        #input("asdasd")
+        if (self.ANALYSIS_MODE):
+            print("````````````````````````````````Enemy_Next_Action````````````````````````````````")
+            print(Enemy_Next_Action)
+            #input("asdasd")
         Total_score_list = []
         Aggresive_Score_list = []
         Defense_Score_list = []

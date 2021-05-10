@@ -8,9 +8,9 @@ import time
 from io import StringIO
 
 # config --------------------------------------------------------------------------------------
-PLAY_TIMES = 70   # Match Times
-UPPER_LIST = ['RLNOTUNE','RL'] 
-LOWER_LIST = ['DumbEnemy','RandomEnemy','GreedyEnemy','IG','DumbEnemy','RL','RLNOTUNE'] 
+PLAY_TIMES = 10   # Match Times
+UPPER_LIST = ['RL'] 
+LOWER_LIST = ['RandomEnemy','GreedyEnemy','IG','RL','RLNOTUNE'] 
 SHOW_BUG_MATCH = True  # show match detail of a bugged match
 SHOW_TIMEOUT_MATCH = False  # show match detail of a timed out match
 # config --------------------------------------------------------------------------------------
@@ -113,7 +113,7 @@ if __name__ == '__main__':
     # Save to Doc
     doc = Document()
     doc.add_paragraph(get_current_time())
-    doc.add_paragraph("\n\nRounds For Each Pair: " + PLAY_TIMES)
+    doc.add_paragraph("\n\nRounds For Each Pair: " + str(PLAY_TIMES))
     doc.add_paragraph("\n\nResult: " + '\n\n')
     for item in doc_out:
         for i in item:

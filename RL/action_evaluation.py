@@ -11,7 +11,7 @@ def action_evaluation(whichPlayer,state, action):
 
     AGGRESIVE_WEIGHT = 1
     DEFENSIVE_WEIGHT = 1
-    PUNISHMENT_WEIGHT = 1.2
+    PUNISHMENT_WEIGHT = 1
 
 
     
@@ -23,23 +23,23 @@ def action_evaluation(whichPlayer,state, action):
     reward_list = []
     ################ chasing action reward parameter ###################
     CHASING_REWARD = 5
-    ELIMINATION_REWARD = 15
+    ELIMINATION_REWARD = 10
 
     ################ fleeing action reward parameter ###################
-    FLEE_REWARD = 5
+    FLEE_REWARD = 7
     SCALE = 2
-    ALERT_DISTANCE = 3
+    ALERT_DISTANCE = 4
 
     ################ approaching action reward parameter ###################
-    APPROACHING_REWARD = 5
+    APPROACHING_REWARD = 3
 
     ################ avoid danger action reward parameter ###################
-    AVOID_DANGER_REWARD = 3
+    AVOID_DANGER_REWARD = 5
 
     ################ throw-elimination action reward parameter ###################
-    THROW_ELIMINATION_REWARD = 8
-    THROW_DEFENSE_REWARD = 5   #throw on least have symbol
-    THROW_ATTACK_REWARD = 5
+    THROW_ELIMINATION_REWARD = 5
+    THROW_DEFENSE_REWARD = 2   #throw on least have symbol
+    THROW_ATTACK_REWARD = 2
 
 
     # Check the evaluation is used on which side
