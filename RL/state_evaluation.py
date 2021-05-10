@@ -21,6 +21,7 @@ def state_evaluation(state):
         else:
             return -WINNING_REWARD
     else:
+        return 0
         # if false, do evaluation of the state, and return the state_score
         # if the file is empty, use the initial parameter
         if os.stat("RL/weights.csv").st_size == 0:
