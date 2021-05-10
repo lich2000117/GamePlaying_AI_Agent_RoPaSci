@@ -77,7 +77,7 @@ class Player:
 
         # Store history to Check Draw Game
         self.history = collections.Counter({self._snap(): 1})
-        self.cur_snap_used_action_index = dd(int)  # a dictionary that stores used action for every snap to avoid those steps in the future
+        self.cur_snap_used_action_index = {}  # a dictionary that stores previous state to avoid draw
             # {state1: 0,1,2}   at state1 used action at index 0, 1 and 2, so next time starting from 3
         self.states_list = []   # used to store states happen in the past turn, a list of State object
 
@@ -118,6 +118,8 @@ class Player:
             cur_snap = self._snap()
             if (self.history[cur_snap] >= 2 and self.AVOID_DRAW):
                 player_best_action = self.draw_avoid_best_action(player_total_score_list, cur_snap)
+                print(player_best_action)
+                #input("asd")
             else:
                 player_best_action = player_total_score_list[0][1]
             
@@ -214,10 +216,13 @@ class Player:
         reference: referee/game.py from Melbourne Uni AI Tutor's code
         """
         play_history = []
+        enemy_token_num = []  #(2,4,1) represents 2 rocks, 4 paper, 2 scissors
+        for key, coor in self.play_dict["opponent"].items():
+            enemy_token_num.append(len(coor))
         for i in "rps":
             play_history.append(tuple(sorted(self.play_dict["player"][i])))
-            play_history.append(tuple(sorted(self.play_dict["opponent"][i])))
-        return (tuple(play_history),
+            #play_history.append(tuple(sorted(self.play_dict["opponent"][i])))
+        return (tuple(enemy_token_num),tuple(play_history),
             # with the same number of throws remaining for each player
             self.throws_left,
             self.enemy_throws_left,
@@ -248,12 +253,21 @@ class Player:
         return predicted_enemy_action
 
     def draw_avoid_best_action(self, player_total_score_list, cur_snap):
-        """Avoid Draw Situation, take another action without using already used indexes checked by default dict"""
-        self.cur_snap_used_action_index[cur_snap] += 1
-        next_index = self.cur_snap_used_action_index[cur_snap]
-        if next_index<len(player_total_score_list):
-            return player_total_score_list[next_index][1]
-        return player_total_score_list[random.randint(0,12)][1]
+        """Avoid Draw Situation, take another action without Reaching previous state"""
+        index = 0
+        # Iterate through every action can take
+        while(index < len(player_total_score_list)):
+            next_action = player_total_score_list[index][1]
+            # get next state if doing this action
+            for symbol in ("rps"):
+                player_cp = deepcopy(self)
+                add_action_to_play_dict(player_cp, "player", next_action)
+                nex_snap = player_cp._snap()
+            #check if next state is already exists in our history, otherwise change to another action
+            if (self.history[nex_snap]<2):
+                return next_action
+            index += 1
+        return player_total_score_list[0][1]
         
 
     def getScoredActionList(self, whichPlayer, Enemy_Next_Action=None):
