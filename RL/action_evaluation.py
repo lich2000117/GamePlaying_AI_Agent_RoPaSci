@@ -77,7 +77,7 @@ def action_evaluation(whichPlayer,state, action):
         enemy_token_chased_list = []
 
         for enemy_token_pos in enemy_token_list:
-            enemy_token_type = get_symbol_by_location(opponent, state.play_dict, enemy_token_pos)
+            enemy_token_type = get_symbol_by_location(opponent, state.play_dict, enemy_token_pos)[0]
             counter_token_type = target_dict[target_dict[enemy_token_type]]
             counter_token_list = state.play_dict[ourPlayer][counter_token_type]
             for counter_token_pos in counter_token_list:

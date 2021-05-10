@@ -58,7 +58,8 @@ class Player:
         if self.game_round <= 3:
             return open_game_stragety(self)
         else:      
-            isContinue = input("Do you want to continue the game? Y/N \n")
+            #isContinue = input("Do you want to continue the game? Y/N \n")
+            isContinue = True
             if isContinue == 'N' or isContinue == 'n':
                 print(isContinue, isContinue == 'N' or isContinue == 'n')
             else:

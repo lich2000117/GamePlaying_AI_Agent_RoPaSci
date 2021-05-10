@@ -135,7 +135,7 @@ class Player:
                     next_enemy_action = self.opponent_action_score_list[selected_score][selected_index][1]
                 else:
                     next_enemy_action = self.opponent_action_score_list[0][0][1]
-                #next_enemy_action = self.opponent_action_score_list[0][0][1]  # always greedy
+                next_enemy_action = self.opponent_action_score_list[0][0][1]  # always greedy
 
             
             # Get sorted Scored Action Evaluation List for us to choose
