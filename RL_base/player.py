@@ -29,7 +29,7 @@ class Player:
         as Lower).
         """
         self.TEMPORAL_DIFF_LEARNING = False
-        self.GREEDY_PREDICT = False
+        self.GREEDY_PREDICT = True
         self.EXCLUDE_THROW_DIST = True
         self.ANALYSIS_MODE = True
         self.AVOID_DRAW = True   # if algorithm break tie automatically
