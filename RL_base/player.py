@@ -45,7 +45,7 @@ class Player:
             "defensive":1,
             "other":1
         }
-        self.STEP_SCALE = 0.1
+        self.STEP_SCALE = 0.5
         
         self.enemy_aggresive_action_score = {}
         self.enemy_defensive_action_score = {}
@@ -248,16 +248,14 @@ class Player:
             self.record_enemy_action_index(opponent_action)
             
             # Adjust enemy evaluation weight according to prediction, reduce the weight if less
-            aggresive_difference = self.enemy_aggresive_action_score[opponent_action] > self.enemy_aggresive_action_score[self.predicted_enemy_action]
-            if aggresive_difference > 0:
-                self.Enemy_Eval_Weight["aggresive"] += self.STEP_SCALE * aggresive_difference
+            if self.enemy_aggresive_action_score[opponent_action] > self.enemy_aggresive_action_score[self.predicted_enemy_action] > 0:
+                self.Enemy_Eval_Weight["aggresive"] += self.STEP_SCALE
             else:
-                self.Enemy_Eval_Weight["aggresive"] += self.STEP_SCALE * aggresive_difference/2
-            defensive_difference = self.enemy_defensive_action_score[opponent_action] > self.enemy_defensive_action_score[self.predicted_enemy_action]    
-            if defensive_difference > 0:
-                self.Enemy_Eval_Weight["defensive"] += self.STEP_SCALE * defensive_difference
+                self.Enemy_Eval_Weight["aggresive"] -= self.STEP_SCALE/2
+            if self.enemy_defensive_action_score[opponent_action] > self.enemy_defensive_action_score[self.predicted_enemy_action] > 0:
+                self.Enemy_Eval_Weight["defensive"] += self.STEP_SCALE
             else:
-                self.Enemy_Eval_Weight["defensive"] += self.STEP_SCALE * defensive_difference/2
+                self.Enemy_Eval_Weight["defensive"] -= self.STEP_SCALE/2
 
 
     def update_accuracy_of_prediction(self, opponent_action):
