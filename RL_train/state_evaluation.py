@@ -1,14 +1,16 @@
 import numpy as np
-from RL.state import State, isGameEnded
-from RL.util import get_symbol_by_location, closest_one, least_distance
+from RL_train.state import State, isGameEnded
+from RL_train.util import get_symbol_by_location, closest_one, least_distance
+from RL_train.action import get_all_valid_action
 from math import tanh
+
 import os
 import csv
 
 def state_evaluation(state, txt = False):
 
-    WINNING_REWARD = 1
-    DRAW_REWARD = -0.1
+    WINNING_REWARD = 100
+    DRAW_REWARD = -10
     w = []
     # state is in the form of (play_dict, player's throw left, opponnet's throw left, player's side)
     # isGameEnded(state) returns (True, "Winner") or (True, "Loser") or (False, "Unknown")
@@ -35,8 +37,8 @@ def state_evaluation(state, txt = False):
 
         feature_array = []                                   # initial parameter
         feature_array.append(board_count(state))                    # 10
-        feature_array.append(hostile_token_in_throw_range(state))   # 5
-        feature_array.append(token_in_enemy_throw_range(state))     # -5
+        feature_array.append(enemy_token_in_danger(state))          # 5
+        feature_array.append(token_in_danger(state))                # -5
         feature_array.append(token_on_board(state))                 # 1
         feature_array.append(enemy_token_on_board(state))           # -1
         feature_array.append(mean_distance_to_attack(state))        # -2
@@ -187,47 +189,43 @@ def min_distance_to_defense(state):
         return min_distance
     
 
-
-def hostile_token_in_throw_range(state):
-    value = 0
-    total_throws = 9
-    have_thrown = total_throws - state.throws_left
-    # got all the positions of tokens of one players in a list
-    # [(r1,q1),(r2,q2),(r3,q3)...(rn,qn)] 
-    throw_range = tuple()
-    enemy_token_list = [item for sublist in state.play_dict["opponent"].values() for item in sublist]
-    if state.side == 'upper':
-        throw_range = range(4, 3-have_thrown, -1)
-        for token in enemy_token_list:
-            if token[0] in throw_range:
-                value += 1
-    else:
-        throw_range = range(-4, -3+have_thrown, +1)
-        for token in enemy_token_list:
-            if token[0] in throw_range:
-                value += 1
-    return value - 1
+def enemy_token_in_danger(state):
+    action_list = get_all_valid_action(state, "player")
+    # all_valid_action = [("SLIDE",start, end), ("SWING",start, end), ("THROW",symbol_type, point)...]
+    count = 0
+    target_dict = {"r":"s", "s":"p", "p":"r"}
+    for action in action_list:
+        if action[0] == "THROW":
+            token_type = action[1]
+            target_type = target_dict[token_type]
+            if action[2] in state.play_dict["opponent"][target_type]:
+                count += 1
+        elif action[0] == "SLIDE" or action[0] == "SWING":
+            token_type = get_symbol_by_location("player", state.play_dict, action[1])
+            target_type = target_dict[token_type]
+            if action[2] in state.play_dict["opponent"][target_type]:
+                count += 1
+    return count
 
 
-def token_in_enemy_throw_range(state):
-    value = 0
-    total_throws = 9
-    enemy_throw_range = tuple()
-    enemy_have_thrown = total_throws - state.enemy_throws_left
-    # got all the positions of tokens of one players in a list
-    # [(r1,q1),(r2,q2),(r3,q3)...(rn,qn)] 
-    player_token_list = [item for sublist in state.play_dict["player"].values() for item in sublist]
-    if state.side == 'upper':
-        enemy_throw_range = range(-4, -3+enemy_have_thrown , +1)
-        for token in player_token_list:
-            if token[0] in enemy_throw_range:
-                value += 1
-    else:
-        enemy_throw_range = range(4, 3-enemy_have_thrown, -1)
-        for token in player_token_list:
-            if token[0] in enemy_throw_range:
-                value += 1
-    return value - 1
+def token_in_danger(state):
+    action_list = get_all_valid_action(state, "opponent")
+    # all_valid_action = [("SLIDE",start, end), ("SWING",start, end), ("THROW",symbol_type, point)...]
+    count = 0
+    target_dict = {"r":"s", "s":"p", "p":"r"}
+    for action in action_list:
+        if action[0] == "THROW":
+            token_type = action[1]
+            target_type = target_dict[token_type]
+            if action[2] in state.play_dict["player"][target_type]:
+                count += 1
+        elif action[0] == "SLIDE" or action[0] == "SWING":
+            token_type = get_symbol_by_location("opponent", state.play_dict, action[1])
+            target_type = target_dict[token_type]
+            if action[2] in state.play_dict["player"][target_type]:
+                count += 1
+    return count
+
 
 
 

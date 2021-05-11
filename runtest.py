@@ -8,15 +8,9 @@ import time
 from io import StringIO
 
 # config --------------------------------------------------------------------------------------
-<<<<<<< Updated upstream
-PLAY_TIMES = 10   # Match Times
-UPPER_LIST = ['RL_base'] 
-LOWER_LIST = ['RandomEnemy','GreedyEnemy','IG','RL','RL_base'] 
-=======
-PLAY_TIMES = 100 # Match Times
+PLAY_TIMES = 100   # Match Times
 UPPER_LIST = ['RL_train'] 
 LOWER_LIST = ['GreedyEnemy'] 
->>>>>>> Stashed changes
 SHOW_BUG_MATCH = True  # show match detail of a bugged match
 SHOW_TIMEOUT_MATCH = False  # show match detail of a timed out match
 # config --------------------------------------------------------------------------------------
@@ -108,7 +102,7 @@ if __name__ == '__main__':
     doc_out=[]
     for upr in UPPER_LIST:
         for lwr in LOWER_LIST:
-            print("Testing  "+ upr +" Against" + lwr+ " .......")
+            print("Testing  "+ upr +" Against " + lwr+ " .......")
             process = Thread(target=test_program(PLAY_TIMES,upr,lwr, doc_out))
             process.start()
             threads.append(process)

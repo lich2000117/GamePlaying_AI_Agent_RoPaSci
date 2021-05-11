@@ -1,13 +1,14 @@
 from RL_train.util import Init_throw_range, add_action_to_play_dict, eliminate_and_update_board, calculate_normal_probability, get_symbol_by_location
 from RL_train.action import get_all_valid_action
 from RL_train.state import State
-from RL_train.action_evaluation import defensive_action_evaluation
+from RL_train.action_evaluation import defensive_action_evaluation, action_evaluation
 from copy import copy, deepcopy
 import random
 import csv
 from RL_train.learning import temporal_difference_learning
 import math
 import os
+# python3 -m referee RL_train GreedyEnemy
 
 class Player:
     
@@ -20,8 +21,8 @@ class Player:
         as Lower).
         """
         self.IGNORE_ROUND = 5  # ignore first 5 rounds when doing probability predicting
-        self.beta = 0.01       
-        self.episilon = 0.5
+        self.beta = 0.2      
+        self.episilon = 0
 
         self.game_round = 1
         self.throws_left = 9   # reduced by 1 after each throw in util/add_action_board function
@@ -63,9 +64,10 @@ class Player:
                             deepcopy(self.enemy_throws_left), deepcopy(self.side))
             action_list = get_all_valid_action(new_state, "player")
             for action in action_list:
-                action_evaluation_list.append( (defensive_action_evaluation(new_state, action), action) )
-            action_evaluation_list = sorted(action_evaluation_list, key=lambda element: (-element[0], element[1][0]))
-            
+                action_evaluation_list.append( (action_evaluation(new_state, action), action) )
+            action_evaluation_list = sorted(action_evaluation_list, reverse=True)
+            # for action in action_evaluation_list:
+            #     print(action)
             die_num = 0
             die_num = random.uniform(0,1)
             if die_num < self.episilon:
@@ -75,7 +77,7 @@ class Player:
                 return random_action[1]
             else:
                 print("greedy action: ", action_evaluation_list[0])
-                # input("Pause")
+                input("Pause")
                 return action_evaluation_list[0][1]
             
            
@@ -114,9 +116,9 @@ class Player:
                     pre_w = []
                     for num in row:
                         pre_w.append(float(num))
-            print("Previous weight: ", pre_w)
+            # print("Previous weight: ", pre_w)
             update_w = temporal_difference_learning(self.states_list, pre_w, self.beta) 
-            print("Weights after update: ", update_w) 
+            # print("Weights after update: ", update_w) 
             # input("___________")   
             # input("Press enter to continue!")                   
             with open('RL_train/weights.csv', 'w', newline='') as file:

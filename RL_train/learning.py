@@ -1,11 +1,11 @@
-from RL_train.state_evaluation import board_count, hostile_token_in_throw_range, token_in_enemy_throw_range
+from RL_train.state_evaluation import board_count, enemy_token_in_danger, token_in_danger
 from RL_train.state_evaluation import token_on_board, enemy_token_on_board
 from RL_train.state_evaluation import mean_distance_to_attack, min_distance_to_attack, mean_distance_to_defense, min_distance_to_defense
 from RL_train.state_evaluation import state_evaluation
 from math import tanh, cosh, sinh
 
 def temporal_difference_learning(states_list, w, beta):
-    function_list = [board_count, hostile_token_in_throw_range, token_in_enemy_throw_range,
+    function_list = [board_count, enemy_token_in_danger, token_in_danger,
                     token_on_board, enemy_token_on_board, mean_distance_to_attack, min_distance_to_attack,
                     mean_distance_to_defense, min_distance_to_defense]
     update_w = []
@@ -31,7 +31,7 @@ def temporal_difference_learning(states_list, w, beta):
             # print("Second derivatives: ", derivatives)
             # print("value: ", function_list[i](current_state), end='')
             error_term += derivatives * diff
-        print("Error term for weight", i, " is ", error_term)
+        # print("Error term for weight", i, " is ", error_term)
         
         # update error to w[i]
         update_w_i = w[i] + beta*error_term
