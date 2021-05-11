@@ -48,13 +48,14 @@ def action_evaluation(state, action):
     APPROACHING_REWARD = 3
 
     ################ avoid danger action reward parameter ###################
-    AVOID_DANGER_REWARD = 5
+    AVOID_DANGER_REWARD = 4
+
     INTERCEPT_REWARD = 10
 
     ################ throw-elimination action reward parameter ###################
     THROW_ELIMINATION_REWARD = 5
     THROW_DEFENSE_REWARD = 2   #throw on least have symbol
-    THROW_ATTACK_REWARD = 2
+
 
     target_dict = {'r':'s', 'p':'r', 's':'p'}
     contact_area_dict = {'r':[],'p':[], 's':[]}
@@ -113,7 +114,7 @@ def action_evaluation(state, action):
             # punish being eliminated
             elif action[2] in state.play_dict["opponent"][counter_type]:
                 punishment_score -= THROW_ELIMINATION_REWARD
-                reward_list.append("be eliminated throw punishment -" + str(THROW_ELIMINATION_REWARD))
+                reward_list.append("be eliminated throw punishment - " + str(THROW_ELIMINATION_REWARD))
     
 
         # throw action2: throw on friendly token
@@ -130,7 +131,7 @@ def action_evaluation(state, action):
         # throw action3: throw on empty grid
         else:
             reward_list.append("throw on empty grid - 2")
-            punishment_score -= SCALE*3
+            punishment_score -= SCALE*2
 
 
         # reward throw action2: throw type of token currently we dont have
@@ -142,12 +143,12 @@ def action_evaluation(state, action):
         counter = {}
         count = 0
         for type in ['r', 'p', 's']:
-            count = len(state.play_dict["player"][type]) - len(state.play_dict["opponent"][target_dict[type]])
+            count = len(state.play_dict["player"][type])
             counter[type] = count
         
-        value = -10 * (counter[action[1]] ) * THROW_ATTACK_REWARD - SCALE
-        aggresive_score += value
-        reward_list.append("throw counter token reward +" + str(value))
+        if counter[action[1]] == 0:
+            aggresive_score += 2
+        reward_list.append("throw counter token reward +" + str(2))
         
             
         
@@ -169,14 +170,15 @@ def action_evaluation(state, action):
         # reward action1: try to eliminate hostile token
         if action[2] in state.play_dict["opponent"][target_token_type]:
             reward_list.append("Chasing enemy token +" + str(CHASING_REWARD))
-            aggresive_score += CHASING_REWARD
+            if len(state.play_dict["opponent"]['r'] + state.play_dict["opponent"]['p'] + state.play_dict["opponent"]['s']) != 1:
+                aggresive_score += CHASING_REWARD
         # punish action: eliminate friendly token or be eliminated by friendly token
         elif action[2] in state.play_dict["player"][target_token_type]:
             reward_list.append("punishment: eliminate friendly token -" + str(ELIMINATION_REWARD))
-            punishment_score -= ELIMINATION_REWARD
+            punishment_score -= ELIMINATION_REWARD * SCALE 
         elif action[2] in state.play_dict["player"][hostile_token_type]:
             reward_list.append("Chasing enemy token -" + str(CHASING_REWARD))
-            punishment_score -= ELIMINATION_REWARD
+            punishment_score -= ELIMINATION_REWARD * SCALE
 
 
         # reward action2: flee from hostile token
@@ -255,12 +257,17 @@ def action_evaluation(state, action):
         if action[1][0] in enemy_throw_range:
             reward_list.append("move token within enemy throw range" + str(AVOID_DANGER_REWARD))
             defense_score += AVOID_DANGER_REWARD
+            if action[2][0] not in enemy_throw_range:
+                reward_list.append("move token out of enenmy throw range" + str(AVOID_DANGER_REWARD))
+                defense_score += AVOID_DANGER_REWARD - SCALE
 
         # reward action5: intercept enemy hostile token
         if action[2] in contact_area_dict[token_type]:
             if get_symbol_by_location("player", state.play_dict, action[2]) == "": 
                 defense_score += INTERCEPT_REWARD
                 reward_list.append("prevent hostile token from coming" + str(INTERCEPT_REWARD))
+        
+        
 
 
         
@@ -276,14 +283,9 @@ def action_evaluation(state, action):
         total_score = -PUNISHMENT_WEIGHT *  punishment_score \
                 + state_score
  
-    total_score = AGGRESIVE_WEIGHT  *  aggresive_score + DEFENSIVE_WEIGHT  *  defense_score + PUNISHMENT_WEIGHT *  punishment_score
+    #total_score = AGGRESIVE_WEIGHT  *  aggresive_score + DEFENSIVE_WEIGHT  *  defense_score + PUNISHMENT_WEIGHT *  punishment_score
     # total_score += state_score
-    return (total_score, reward_list)
-
-
-
-
-
+    return (state_score, reward_list)
 
 
 

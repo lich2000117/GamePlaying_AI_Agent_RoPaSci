@@ -128,9 +128,6 @@ class Player:
         self.game_round += 1
         
 
-       
-
-  
 
 def open_game_stragety(self):
     if self.game_round == 1: 
