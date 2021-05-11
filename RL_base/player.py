@@ -40,12 +40,22 @@ class Player:
         self.beta = 0.01
         self.episilon = 0.3
         
-        self.Enemy_Eval_Weight = {
+        self.Our_Eval_Weight = {
             "aggresive":1,
             "defensive":1,
             "other":1
         }
-        self.STEP_SCALE = 0.5
+        
+        self.Enemy_Eval_Weight = {
+            "aggresive":1,
+            "defensive":1,
+            "prefer_throw":1,    # the enemy's preference of throw elimination or slide elimination
+            "other":1
+        }
+        # Parameters to adjust Enemy Evaluation Function's Weight
+        self.STEP_ATK_SCALE = 0.2  # aggresiveness of enemy
+        self.STEP_DEF_SCALE = 0.2  # defensiveness of enemy
+        self.STEP_THROW_RATE = 0.2  # if enemy prefers throw more
         
         self.enemy_aggresive_action_score = {}
         self.enemy_defensive_action_score = {}
@@ -128,8 +138,6 @@ class Player:
             cur_snap = self._snap()
             if (self.history[cur_snap] >= 2 and self.AVOID_DRAW):
                 player_best_action = self.draw_avoid_best_action(player_total_score_list, cur_snap)
-                print(player_best_action)
-                #input("asd")
             else:
                 player_best_action = player_total_score_list[0][1]
             
@@ -137,7 +145,6 @@ class Player:
             #     # if no action, redo evaluation without enemy's action
             #     player_total_score_list = self.getScoredActionList("player", next_enemy_action)
         
-        #input("asd")
         return player_best_action
             
 
@@ -193,11 +200,11 @@ class Player:
         cur_snap = self._snap()
         self.history[cur_snap] += 1
         self.game_round += 1
-
+        
 
         #Analyse Enemy's choice based on our evaluation list 
         if (self.ANALYSIS_MODE):
-            if (self.game_round>self.IGNORE_ROUND):
+            if (self.game_round>self.IGNORE_ROUND+1):
                 array = self.opponent_score_array
                 # dist.agg(['min', 'max', 'mean', 'std']).round(decimals=2)
                 print("\n Enemy Index Mean:")
@@ -211,14 +218,22 @@ class Player:
                 print(round(self.total_predict/self.game_round,3))
                 print("\nEnemy Weight:")
                 print(self.Enemy_Eval_Weight)
+                print("````````````````````````````````predicted_action````````````````````````````````")
+                print(self.predicted_enemy_action)
+                print("````````````````````````````````predicted_aggresive_score````````````````````````````````")
+                print(self.enemy_aggresive_action_score[self.predicted_enemy_action])
+                print(self.enemy_aggresive_action_score[opponent_action])
                 
+                print("````````````````````````````````actual _action````````````````````````````````")
+                print(opponent_action)
+                #input("yes")
                 # fig, ax = plt.subplots()
                 # dist.plot.hist(density=True, ax=ax)
                 # ax.set_ylabel('Probability')
                 # ax.grid(axis='y')
                 # ax.set_facecolor('#d8dcd6')
                 # plt.savefig("output.png")
-
+        
     
     def _snap(self):
         """
@@ -248,15 +263,53 @@ class Player:
             self.record_enemy_action_index(opponent_action)
             
             # Adjust enemy evaluation weight according to prediction, reduce the weight if less
-            if self.enemy_aggresive_action_score[opponent_action] > self.enemy_aggresive_action_score[self.predicted_enemy_action] > 0:
-                self.Enemy_Eval_Weight["aggresive"] += self.STEP_SCALE
+            aggresive_diff = self.enemy_aggresive_action_score[opponent_action] - self.enemy_aggresive_action_score[self.predicted_enemy_action]
+            defensive_diff = self.enemy_defensive_action_score[opponent_action] - self.enemy_defensive_action_score[self.predicted_enemy_action]
+            # If actual action more aggresive-biased or defensive-biased, adjust their weights
+            if aggresive_diff > 0:
+                if self.STEP_ATK_SCALE < 5: self.STEP_ATK_SCALE *= 2  #update scale exponentialy
+                self.Enemy_Eval_Weight["aggresive"] += self.STEP_ATK_SCALE
+                # Upper Limit Setup
+                if self.Enemy_Eval_Weight["aggresive"] > 100:
+                    self.Enemy_Eval_Weight["aggresive"] = 100
+            # if enemy is less aggresive
+            elif aggresive_diff < 0:
+                if self.STEP_ATK_SCALE < 5: self.STEP_ATK_SCALE *= 2
+                self.Enemy_Eval_Weight["aggresive"] -= self.STEP_ATK_SCALE
             else:
-                self.Enemy_Eval_Weight["aggresive"] -= self.STEP_SCALE/2
-            if self.enemy_defensive_action_score[opponent_action] > self.enemy_defensive_action_score[self.predicted_enemy_action] > 0:
-                self.Enemy_Eval_Weight["defensive"] += self.STEP_SCALE
+                self.STEP_ATK_SCALE /= 2 #downscale scale exponentialy to achieve smooth aggresive weights
+            
+            # if enemy is more defensive
+            if defensive_diff > 0:
+                if self.STEP_DEF_SCALE < 5: self.STEP_DEF_SCALE *= 2
+                self.Enemy_Eval_Weight["defensive"] += self.STEP_DEF_SCALE
+                if self.Enemy_Eval_Weight["defensive"] > 100:
+                    self.Enemy_Eval_Weight["defensive"] = 100
+            elif defensive_diff < 0:
+                # Lower Limit Setup
+                if self.STEP_DEF_SCALE < 5: self.STEP_DEF_SCALE *= 2
+                self.Enemy_Eval_Weight["defensive"] -= self.STEP_DEF_SCALE/2
             else:
-                self.Enemy_Eval_Weight["defensive"] -= self.STEP_SCALE/2
-
+                self.STEP_DEF_SCALE /= 2
+                
+            # Check if enemy prefers slides rather than throw 
+            if self.predicted_enemy_action[0] in "THROW":
+                # predict throw and enemy not throw
+                if opponent_action[0] not in "THROW":
+                    if self.STEP_THROW_RATE < 5: self.STEP_THROW_RATE *= 2
+                    self.Enemy_Eval_Weight["prefer_throw"] -= self.STEP_THROW_RATE/2
+                else:
+                    self.STEP_THROW_RATE /= 2
+            # Check if enemy prefers throw rather than slides 
+            else:
+                # predict not throw but enemy throw
+                if opponent_action[0] in "THROW":
+                    if self.STEP_THROW_RATE < 5: self.STEP_THROW_RATE *= 2
+                    self.Enemy_Eval_Weight["prefer_throw"] += self.STEP_THROW_RATE
+                else:
+                    self.STEP_THROW_RATE /= 2
+                    
+                    
 
     def update_accuracy_of_prediction(self, opponent_action):
         """ Get the accuracy of our prediction"""
@@ -276,10 +329,10 @@ class Player:
         else:
             # hard coding, get Next Enemy Action without using probability
             if (len(self.opponent_action_score_list) > predict_index):
-                predicted_enemy_action = self.opponent_action_score_list[predict_index][1]
+                self.predicted_enemy_action = self.opponent_action_score_list[predict_index][1]
             else:
-                predicted_enemy_action = self.opponent_action_score_list[0][1]
-        return predicted_enemy_action
+                self.predicted_enemy_action = self.opponent_action_score_list[0][1]
+        return self.predicted_enemy_action
 
     def draw_avoid_best_action(self, player_total_score_list, cur_snap):
         """Avoid Draw Situation, take another action without Reaching previous state"""
@@ -330,15 +383,14 @@ class Player:
             
 
         action_list = get_all_valid_action(whichPlayer, prev_state)
+        random.shuffle(action_list)
         next_state = prev_state
         # add enemy next action into state, but do not calculate elimination
         if Enemy_Next_Action:
             next_state = add_next_action_to_play_dict(prev_state, "opponent", Enemy_Next_Action)
             #eliminate_and_update_board(next_state, prev_state.target_dict)
             
-        if ((self.ANALYSIS_MODE) and (whichPlayer == "player")):
-            print("````````````````````````````````Enemy_Next_Action````````````````````````````````")
-            print(Enemy_Next_Action)
+       
         # Get Score List
         Total_score_list = []
         for action in action_list:

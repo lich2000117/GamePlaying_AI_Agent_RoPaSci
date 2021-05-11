@@ -27,7 +27,7 @@ def action_evaluation(playerClass, whichPlayer,state, action):
     ELIMINATION_REWARD = 10
 
     ################ fleeing action reward parameter ###################
-    FLEE_REWARD = 7
+    FLEE_REWARD = 6
     SCALE = 2
     ALERT_DISTANCE = 4
 
@@ -35,24 +35,41 @@ def action_evaluation(playerClass, whichPlayer,state, action):
     APPROACHING_REWARD = 3
 
     ################ avoid danger action reward parameter ###################
-    AVOID_DANGER_REWARD = 5
+    AVOID_DANGER_REWARD = 3
 
     ################ throw-elimination action reward parameter ###################
-    THROW_ELIMINATION_REWARD = 5
-    THROW_DEFENSE_REWARD = 2   #throw on least have symbol
-    THROW_ATTACK_REWARD = 2
+    THROW_ELIMINATION_REWARD = 3
+    THROW_DEFENSE_REWARD = 1  #throw on least have symbol
+    THROW_ATTACK_REWARD = 1
 
 
     # Check the evaluation is used on which side
     if whichPlayer == "player":
         ourPlayer = "player"
         opponent = "opponent"
+        # According to Enemy's action, we change our weight
+        
+        # if enemy is very aggresive, turn into defend mode
+        if playerClass.Enemy_Eval_Weight["aggresive"] > 5 * playerClass.Enemy_Eval_Weight["defensive"]:
+            DEFENSIVE_WEIGHT = 1.2
+            ALERT_DISTANCE = 5
+        else:
+            # Aggresive Mode
+            AGGRESIVE_WEIGHT = 1.2
+            # If enemy is extremely defensive, aggresive mode on
+            if 2*playerClass.Enemy_Eval_Weight["defensive"] > playerClass.Enemy_Eval_Weight["aggresive"]:
+                AGGRESIVE_WEIGHT = 1.5
+                ELIMINATION_REWARD = 15
+            
     else:
         ourPlayer = "opponent"
         opponent = "player"
         AGGRESIVE_WEIGHT = playerClass.Enemy_Eval_Weight["aggresive"]
         DEFENSIVE_WEIGHT = playerClass.Enemy_Eval_Weight["defensive"]
         PUNISHMENT_WEIGHT = playerClass.Enemy_Eval_Weight["other"]
+        THROW_ELIMINATION_REWARD *= playerClass.Enemy_Eval_Weight["prefer_throw"]
+        THROW_DEFENSE_REWARD *= playerClass.Enemy_Eval_Weight["prefer_throw"]
+        THROW_ATTACK_REWARD *= playerClass.Enemy_Eval_Weight["prefer_throw"]
 
     target_dict = {'r':'s', 'p':'r', 's':'p'}
     # evaluation of action
@@ -142,7 +159,7 @@ def action_evaluation(playerClass, whichPlayer,state, action):
             counter[type] = count
         
         value = -1 * (counter[action[1]]+1) * THROW_ATTACK_REWARD
-        aggresive_score += value
+        aggresive_score += value/2
         reward_list.append("throw counter token reward +" + str(value))
         
             
