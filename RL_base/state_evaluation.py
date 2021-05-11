@@ -7,7 +7,7 @@ import csv
 
 def state_evaluation(state):
 
-    WINNING_REWARD = 999
+    WINNING_REWARD = 9999
     DRAW_REWARD = -100
 
     # state is in the form of (play_dict, player's throw left, opponnet's throw left, player's side)

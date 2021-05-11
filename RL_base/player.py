@@ -29,7 +29,6 @@ class Player:
         as Lower).
         """
         self.TEMPORAL_DIFF_LEARNING = False
-        self.USE_TOTAL_SCORE_PREDICTION = True
         self.GREEDY_PREDICT = False
         self.EXCLUDE_THROW_DIST = True
         self.ANALYSIS_MODE = True
@@ -43,6 +42,7 @@ class Player:
         self.Our_Eval_Weight = {
             "aggresive":1,
             "defensive":1,
+            "prefer_throw":1,
             "other":1
         }
         
@@ -55,7 +55,7 @@ class Player:
         # Parameters to adjust Enemy Evaluation Function's Weight
         self.STEP_ATK_SCALE = 0.2  # aggresiveness of enemy
         self.STEP_DEF_SCALE = 0.2  # defensiveness of enemy
-        self.STEP_THROW_RATE = 0.2  # if enemy prefers throw more
+        self.STEP_THROW_RATE = 0.5  # if enemy prefers throw more
         
         self.enemy_aggresive_action_score = {}
         self.enemy_defensive_action_score = {}
@@ -297,18 +297,13 @@ class Player:
                 # predict throw and enemy not throw
                 if opponent_action[0] not in "THROW":
                     if self.STEP_THROW_RATE < 5: self.STEP_THROW_RATE *= 2
-                    self.Enemy_Eval_Weight["prefer_throw"] -= self.STEP_THROW_RATE/2
+                    self.Enemy_Eval_Weight["prefer_throw"] -= self.STEP_THROW_RATE
                 else:
                     self.STEP_THROW_RATE /= 2
+                    self.Enemy_Eval_Weight["prefer_throw"] = 1
             # Check if enemy prefers throw rather than slides 
             else:
-                # predict not throw but enemy throw
-                if opponent_action[0] in "THROW":
-                    if self.STEP_THROW_RATE < 5: self.STEP_THROW_RATE *= 2
-                    self.Enemy_Eval_Weight["prefer_throw"] += self.STEP_THROW_RATE
-                else:
-                    self.STEP_THROW_RATE /= 2
-                    
+                a = 1
                     
 
     def update_accuracy_of_prediction(self, opponent_action):

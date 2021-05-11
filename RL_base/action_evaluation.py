@@ -9,7 +9,7 @@ def action_evaluation(playerClass, whichPlayer,state, action):
     """this function returns a score that equals
             Score = value_of_action + value_of_postAction_state"""
             
-    AGGRESIVE_WEIGHT = 1
+    AGGRESIVE_WEIGHT = 1.5
     DEFENSIVE_WEIGHT = 1
     PUNISHMENT_WEIGHT = 1
     
@@ -27,12 +27,12 @@ def action_evaluation(playerClass, whichPlayer,state, action):
     ELIMINATION_REWARD = 10
 
     ################ fleeing action reward parameter ###################
-    FLEE_REWARD = 6
+    FLEE_REWARD = 5
     SCALE = 2
     ALERT_DISTANCE = 4
 
     ################ approaching action reward parameter ###################
-    APPROACHING_REWARD = 3
+    APPROACHING_REWARD = 4
 
     ################ avoid danger action reward parameter ###################
     AVOID_DANGER_REWARD = 3
@@ -47,29 +47,13 @@ def action_evaluation(playerClass, whichPlayer,state, action):
     if whichPlayer == "player":
         ourPlayer = "player"
         opponent = "opponent"
-        # According to Enemy's action, we change our weight
-        
-        # if enemy is very aggresive, turn into defend mode
-        if playerClass.Enemy_Eval_Weight["aggresive"] > 5 * playerClass.Enemy_Eval_Weight["defensive"]:
-            DEFENSIVE_WEIGHT = 1.2
-            ALERT_DISTANCE = 5
-        else:
-            # Aggresive Mode
-            AGGRESIVE_WEIGHT = 1.2
-            # If enemy is extremely defensive, aggresive mode on
-            if 2*playerClass.Enemy_Eval_Weight["defensive"] > playerClass.Enemy_Eval_Weight["aggresive"]:
-                AGGRESIVE_WEIGHT = 1.5
-                ELIMINATION_REWARD = 15
+        prefer_throw = playerClass.Our_Eval_Weight["prefer_throw"]
+        THROW_ELIMINATION_REWARD =  prefer_throw
+        THROW_DEFENSE_REWARD = prefer_throw  #throw on least have symbol
             
     else:
         ourPlayer = "opponent"
         opponent = "player"
-        AGGRESIVE_WEIGHT = playerClass.Enemy_Eval_Weight["aggresive"]
-        DEFENSIVE_WEIGHT = playerClass.Enemy_Eval_Weight["defensive"]
-        PUNISHMENT_WEIGHT = playerClass.Enemy_Eval_Weight["other"]
-        THROW_ELIMINATION_REWARD *= playerClass.Enemy_Eval_Weight["prefer_throw"]
-        THROW_DEFENSE_REWARD *= playerClass.Enemy_Eval_Weight["prefer_throw"]
-        THROW_ATTACK_REWARD *= playerClass.Enemy_Eval_Weight["prefer_throw"]
 
     target_dict = {'r':'s', 'p':'r', 's':'p'}
     # evaluation of action
@@ -275,12 +259,13 @@ def action_evaluation(playerClass, whichPlayer,state, action):
     # evaluation of post-action state
     state_score = state_evaluation(new_state)
 
-    # if definitely win, prefer to eat our own token
-    if state_score > 800:
-        total_score = -PUNISHMENT_WEIGHT *  punishment_score \
-                + state_score
- 
+
     total_score = AGGRESIVE_WEIGHT  *  aggresive_score + DEFENSIVE_WEIGHT  *  defense_score + PUNISHMENT_WEIGHT *  punishment_score + state_score
+    # if definitely win, prefer to Do any action 
+    if state_score > 800:
+        if whichPlayer == "player":
+            playerClass.Our_Eval_Weight["prefer_throw"] = 9999
+        
 
     out_score_dict = {"total_score": round(total_score,3),
                         "state_score": round(state_score,3),
