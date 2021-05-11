@@ -77,7 +77,7 @@ class Player:
                 return random_action[1]
             else:
                 print("greedy action: ", action_evaluation_list[0])
-                input("Pause")
+                # input("Pause")
                 return action_evaluation_list[0][1]
             
            

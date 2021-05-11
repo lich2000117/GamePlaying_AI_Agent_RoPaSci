@@ -54,7 +54,7 @@ def action_evaluation(state, action):
 
     ################ throw-elimination action reward parameter ###################
     THROW_ELIMINATION_REWARD = 5
-    THROW_DEFENSE_REWARD = 2   #throw on least have symbol
+    THROW_DEFENSE_REWARD = 1   #throw on least have symbol
 
 
     target_dict = {'r':'s', 'p':'r', 's':'p'}
@@ -121,12 +121,12 @@ def action_evaluation(state, action):
         elif action[2] in player_token_list:
             # punish eliminating friendly token
             if action[2] in state.play_dict["player"][target_type]:
-                punishment_score -= THROW_ELIMINATION_REWARD 
+                punishment_score -= THROW_ELIMINATION_REWARD*SCALE*SCALE 
                 reward_list.append("throw: eliminating friendly token punishment -"+str(THROW_ELIMINATION_REWARD))
             # punish being eliminated
             elif action[2] in state.play_dict["player"][counter_type]:
                 reward_list.append("throw: on counter friendly token punishment -"+str(THROW_ELIMINATION_REWARD))
-                punishment_score -= THROW_ELIMINATION_REWARD
+                punishment_score -= THROW_ELIMINATION_REWARD*SCALE*SCALE 
 
         # throw action3: throw on empty grid
         else:
@@ -283,7 +283,7 @@ def action_evaluation(state, action):
         total_score = -PUNISHMENT_WEIGHT *  punishment_score \
                 + state_score
  
-    #total_score = AGGRESIVE_WEIGHT  *  aggresive_score + DEFENSIVE_WEIGHT  *  defense_score + PUNISHMENT_WEIGHT *  punishment_score
+    # total_score = AGGRESIVE_WEIGHT  *  aggresive_score + DEFENSIVE_WEIGHT  *  defense_score + PUNISHMENT_WEIGHT *  punishment_score
     # total_score += state_score
     return (state_score, reward_list)
 
