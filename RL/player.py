@@ -2,10 +2,9 @@ from RL.util import Init_throw_range, add_action_to_play_dict, eliminate_and_upd
 from RL.action import get_all_valid_action
 from RL.action_evaluation import action_evaluation
 from RL.state import State
-from copy import copy
-from copy import deepcopy
-import random
+from copy import copy, deepcopy
 from RL.random_algorithms import refined_random_throw, random_throw, random_action, get_current_player_nodes_count
+import random
 import csv
 from RL.learning import temporal_difference_learning
 import os
@@ -15,10 +14,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import collections
 from collections import defaultdict as dd
-from RL.prediction import *
+from RL.prediction import getScoredActionList, select_enemy_next_index, update_next_enemy_action, draw_avoid_best_action, update_accuracy_of_prediction, record_enemy_action_index
+
 
 class Player:
-    
     
     def __init__(self, player):
         """
@@ -37,7 +36,7 @@ class Player:
         self.REFINED_THROW = True   # if using advanced random throw strategy
         self.CONFIDENCE_LEVEL = 0.05   #confidence level to exclude outliers into distribution
         self.IGNORE_ROUND = 5  # ignore first 5 rounds when doing probability predicting
-        self.beta = 0.2
+        self.beta = 0.2         
         self.episilon = 0.1
 
         self.game_round = 1
@@ -64,7 +63,6 @@ class Player:
         self.target_dict = {"r":"s", "s":"p", "p":"r"}
 
         # Store Opponent's Action List
-        self.opponent_action_score_list = []
         self.score_names = ["Total_Score_Index", "Aggresive_Index", "Defense_Index", "Punishment_Index", "State_Score_Index"]
         self.opponent_score_array = np.array(0)
         self.enemy_action_dist_dict = {}
@@ -89,28 +87,22 @@ class Player:
         Called at the beginning of each turn. Based on the current state
         of the game, select an action to play this turn.
         """
-        # Get Enemy Action's Probability and return the mean index using "Total Score"
-        selected_score = 0
-        selected_index = 0
         next_enemy_action = None
         # hard code the first three rounds to lay out my defensive 
         if self.game_round <= 3:
             return open_game_stragety(self)
         else:
-            ### ---------------Prediction
-
-            
-            #after certain rounds, start to predict
+            # ---------------Prediction---------------
+            # After certain rounds, get enough data of opponent and start to predict opponent's next action
             if (self.game_round > self.IGNORE_ROUND):
-            # Get sorted Action Evaluation List for Enemy's choice
-                self.opponent_action_score_list = getScoredActionList(self, "opponent")
-        
-                #[(Score,  Action,  Probability,  Reward Explanation), (.......)]
-                #[(14, (THROW, xxx), 0.72, ("Reward Explanation")), (), ()]
+
+                # Get sorted Action Evaluation List for Enemy's choice
+                opponent_action_score_list = getScoredActionList(self, "opponent")
+                #in the format of [(Score,  Action,  Probability,  Reward Explanation), (.......)]
                 
                 predict_index = select_enemy_next_index(self)
-                self.predicted_enemy_action = update_next_enemy_action(self,predict_index)   
-                assert(self.predicted_enemy_action!=None)
+                self.predicted_enemy_action = update_next_enemy_action(self, predict_index)   
+                assert(self.predicted_enemy_action != None)
 
             ### ----------------Choose Best Step For Our Player
             # Get sorted Scored Action Evaluation List for us to choose
@@ -121,9 +113,9 @@ class Player:
             # Avoid Draw Situation, take another action without using already used indexes checked by default dict
             cur_snap = self._snap()
             if (self.history[cur_snap] >= 2 and self.AVOID_DRAW):
-                player_best_action = draw_avoid_best_action(self, player_total_score_list, cur_snap)
+                return draw_avoid_best_action(self, player_total_score_list, cur_snap)
             else:
-                player_best_action = player_total_score_list[0][1]
+                return player_total_score_list[0][1]
             
             # return best action, if no action, do evaluation without enemy's action
             if len(player_total_score_list) < 1:
@@ -135,10 +127,6 @@ class Player:
                 else:
                     return player_total_score_list[0][1]
 
-                
-            
-
-        
     
     def update(self, opponent_action, player_action):
         """

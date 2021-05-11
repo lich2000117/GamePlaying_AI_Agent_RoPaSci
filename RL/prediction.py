@@ -15,7 +15,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import collections
 from collections import defaultdict as dd
-from RL.prediction import *
 
 def getScoredActionList(playerClass, whichPlayer, Enemy_Next_Action=None):
     """
@@ -23,7 +22,7 @@ def getScoredActionList(playerClass, whichPlayer, Enemy_Next_Action=None):
     Can Use to get Opponent's score list,
     return one list: Total_score_list
     """
-
+    # Get Enemy Action's Probability and return the mean index using "Total Score"
     # Check if using on ourside or predicting enemy
     if (whichPlayer == "player"):
         side = playerClass.side
@@ -50,6 +49,7 @@ def getScoredActionList(playerClass, whichPlayer, Enemy_Next_Action=None):
     if ((playerClass.ANALYSIS_MODE) and (whichPlayer == "player")):
         print("````````````````````````````````Enemy_Next_Action````````````````````````````````")
         print(Enemy_Next_Action)
+
     # Get Score List
     Total_score_list = []
     for action in action_list:
@@ -57,6 +57,7 @@ def getScoredActionList(playerClass, whichPlayer, Enemy_Next_Action=None):
         total_score = scoring_dict["total_score"]
         reward = scoring_dict["reward_list"]#reWard_list
         Total_score_list.append( (total_score, action, reward) )
+
     # Sort to choose highest score
     Total_score_list = sorted(Total_score_list, reverse=True)
 
@@ -78,6 +79,7 @@ def update_accuracy_of_prediction(playerClass, opponent_action):
     if (playerClass.total_predict):
         playerClass.predict_accuracy = round(playerClass.corrected_predict/playerClass.total_predict,3)
 
+
 def update_next_enemy_action(playerClass, predict_index):
     """update enemy's next action into player class"""
     # always greedy predict enemy
@@ -91,6 +93,7 @@ def update_next_enemy_action(playerClass, predict_index):
             predicted_enemy_action = playerClass.opponent_action_score_list[0][1]
     return predicted_enemy_action
 
+
 def draw_avoid_best_action(playerClass, player_total_score_list, cur_snap):
     """Avoid Draw Situation, take another action without using already used indexes checked by default dict"""
     playerClass.cur_snap_used_action_index[cur_snap] += 1
@@ -99,8 +102,6 @@ def draw_avoid_best_action(playerClass, player_total_score_list, cur_snap):
         return player_total_score_list[next_index][1]
     return player_total_score_list[random.randint(0,12)][1]
     
-
-
 
 def select_enemy_next_index(playerClass):
     """select most likely enemy's action"""
@@ -119,7 +120,6 @@ def select_enemy_next_index(playerClass):
         print(selected_index)
         print("``````````````````````````````````````````")
     return selected_index
-
 
 
 
@@ -150,6 +150,7 @@ def record_enemy_action_index(playerClass, opponent_action):
             index_to_add = score_array.mean()
     # add to action array
     playerClass.opponent_score_array = np.append(score_array, index)
+
 
 def add_next_action_to_play_dict(state, player, action):
     """
