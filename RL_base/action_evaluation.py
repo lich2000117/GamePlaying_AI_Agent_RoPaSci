@@ -9,7 +9,7 @@ def action_evaluation(playerClass, whichPlayer,state, action):
     """this function returns a score that equals
             Score = value_of_action + value_of_postAction_state"""
             
-    AGGRESIVE_WEIGHT = 1.5
+    AGGRESIVE_WEIGHT = 1
     DEFENSIVE_WEIGHT = 1
     PUNISHMENT_WEIGHT = 1
     
@@ -49,7 +49,6 @@ def action_evaluation(playerClass, whichPlayer,state, action):
         opponent = "opponent"
         prefer_throw = playerClass.Our_Eval_Weight["prefer_throw"]
         THROW_ELIMINATION_REWARD =  prefer_throw
-        THROW_DEFENSE_REWARD = prefer_throw  #throw on least have symbol
             
     else:
         ourPlayer = "opponent"
