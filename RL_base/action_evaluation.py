@@ -1,7 +1,7 @@
 from RL_base.state_evaluation import state_evaluation
 from copy import deepcopy
 from RL_base.state import State
-from RL_base.util import get_symbol_by_location, least_distance, closest_one, get_current_player_nodes_count
+from RL_base.util import get_symbol_by_location, least_distance, closest_one, get_current_player_nodes_count, get_six_adj_nodes
 
 def action_evaluation(playerClass, whichPlayer,state, action):
     # state = (play_dict, player's throw left, opponnet's throw left, player's side)
@@ -27,21 +27,23 @@ def action_evaluation(playerClass, whichPlayer,state, action):
     ELIMINATION_REWARD = 10
 
     ################ fleeing action reward parameter ###################
-    FLEE_REWARD = 5
+    FLEE_REWARD = 6
     SCALE = 2
-    ALERT_DISTANCE = 4
+    ALERT_DISTANCE = 3
 
     ################ approaching action reward parameter ###################
     APPROACHING_REWARD = 4
 
     ################ avoid danger action reward parameter ###################
     AVOID_DANGER_REWARD = 3
+    INTERCEPT_REWARD = 10
 
     ################ throw-elimination action reward parameter ###################
     THROW_ELIMINATION_REWARD = 3
     THROW_DEFENSE_REWARD = 1  #throw on least have symbol
     THROW_ATTACK_REWARD = 1
 
+    
 
     # Check the evaluation is used on which side
     if whichPlayer == "player":
@@ -55,6 +57,9 @@ def action_evaluation(playerClass, whichPlayer,state, action):
         opponent = "player"
         AGGRESIVE_WEIGHT = playerClass.Enemy_Eval_Weight["aggresive"]
         DEFENSIVE_WEIGHT = playerClass.Enemy_Eval_Weight["defensive"]
+    
+    contact_area_dict = {'r':[],'p':[], 's':[]}
+    state_analysis(state, contact_area_dict, ourPlayer, opponent)
 
     target_dict = {'r':'s', 'p':'r', 's':'p'}
     # evaluation of action
@@ -132,7 +137,7 @@ def action_evaluation(playerClass, whichPlayer,state, action):
 
 
         # reward throw action2: throw type of token currently we dont have
-        least_have_type = sorted(get_current_player_nodes_count(state, "player"), key=get_current_player_nodes_count(state, "player").get)[0]
+        least_have_type = sorted(get_current_player_nodes_count(state, whichPlayer), key=get_current_player_nodes_count(state, whichPlayer).get)[0]
         if action[1] == least_have_type:
             defense_score += THROW_DEFENSE_REWARD
 
@@ -251,21 +256,27 @@ def action_evaluation(playerClass, whichPlayer,state, action):
         if action[1][0] in enemy_throw_range:
             reward_list.append("move token within enemy throw range" + str(AVOID_DANGER_REWARD))
             defense_score += AVOID_DANGER_REWARD
-
+            
+        # reward action5: intercept enemy hostile token
+        if action[2] in contact_area_dict[token_type]:
+            if get_symbol_by_location(whichPlayer, state.play_dict, action[2]) == "": 
+                defense_score += INTERCEPT_REWARD
+                reward_list.append("prevent hostile token from coming" + str(INTERCEPT_REWARD))
         
 
     # create new state and update with the action for further evaluation
     new_state = add_action_to_play_dict(state, ourPlayer, action)
     eliminate_and_update_board(new_state, target_dict)
     # evaluation of post-action state
-    state_score = state_evaluation(new_state)
+    state_score = state_evaluation(new_state, ourPlayer, opponent)
 
 
     total_score = AGGRESIVE_WEIGHT  *  aggresive_score + DEFENSIVE_WEIGHT  *  defense_score + PUNISHMENT_WEIGHT *  punishment_score + state_score
     # if definitely win, prefer to Do any action 
-    if state_score > 800:
+    if state_score > 1000:
         if whichPlayer == "player":
-            playerClass.Our_Eval_Weight["prefer_throw"] = 9999
+            playerClass.Our_Eval_Weight["prefer_throw"] = 999
+            total_score = AGGRESIVE_WEIGHT  *  aggresive_score + DEFENSIVE_WEIGHT  *  defense_score + PUNISHMENT_WEIGHT *  punishment_score + state_score
         
 
     out_score_dict = {"total_score": round(total_score,3),
@@ -279,6 +290,22 @@ def action_evaluation(playerClass, whichPlayer,state, action):
 
 
 
+def state_analysis(state, contact_area_dict, whichPlayer, opponent):
+    target_dict = {"r":"s", "s":"p", "p":"r"}
+    for token_type in ['r', 'p', 's']:
+        counter_type = target_dict[target_dict[token_type]]
+        for token_pos in state.play_dict[whichPlayer][token_type]:
+            hostile_token_list = state.play_dict[opponent][counter_type]
+            if hostile_token_list:
+                hostile_token_pos = closest_one(token_pos, hostile_token_list)
+                if least_distance(token_pos, hostile_token_pos) == 2:
+                    contact_areaA = set(get_six_adj_nodes(token_pos))
+                    contact_areaB = set(get_six_adj_nodes(hostile_token_pos))
+                    contact_area = contact_areaA.intersection(contact_areaB)
+                    for area in list(contact_area):
+                        if area in state.play_dict[whichPlayer].values():
+                            contact_area.remove(area)
+                    contact_area_dict[target_dict[token_type]] += (list(contact_area))
 
 
 

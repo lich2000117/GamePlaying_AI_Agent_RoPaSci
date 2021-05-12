@@ -28,7 +28,7 @@ class Player:
         play as Upper), or the string "lower" (if the instance will play
         as Lower).
         """
-        self.ITERATION = 100
+        self.ITERATION = 50
         self.STEP_LOOK_AHEAD = 1
         self.TEMPORAL_DIFF_LEARNING = False
         self.GREEDY_PREDICT = True
@@ -38,11 +38,9 @@ class Player:
         self.REFINED_THROW = True   # if using advanced random throw strategy
         self.CONFIDENCE_LEVEL = 0.05   #confidence level to exclude outliers into distribution
         self.IGNORE_ROUND = 5  # ignore first 5 rounds when doing probability predicting
-        self.beta = 0.01
-        self.episilon = 0.3
         
         self.Our_Eval_Weight = {
-            "aggresive":1,
+            "aggresive":1.2,
             "defensive":1,
             "prefer_throw":1,
             "other":1
@@ -131,6 +129,7 @@ class Player:
                 # Predict Enemy's action based on our next action
                 self.predict_next_enemy_action(player_total_score_list[0][1])
                 i+=1
+                
             # get our action based on predicted enemy's action
             player_total_score_list = self.getScoredActionList("player", self.predicted_enemy_action)
             

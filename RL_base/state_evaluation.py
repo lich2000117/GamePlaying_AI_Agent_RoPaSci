@@ -5,14 +5,14 @@ from math import tanh
 import os
 import csv
 
-def state_evaluation(state):
+def state_evaluation(state, ourPlayer, enemyPlayer):
 
     WINNING_REWARD = 9999
     DRAW_REWARD = -100
 
     # state is in the form of (play_dict, player's throw left, opponnet's throw left, player's side)
     # isGameEnded(state) returns (True, "Winner") or (True, "Loser") or (False, "Unknown")
-    if isGameEnded(state)[0]:
+    if isGameEnded(state, ourPlayer, enemyPlayer)[0]:
         # if true, return the utility of the state, 1 for victory, 0 for lose
         if isGameEnded(state)[1] == "Winner":
             return WINNING_REWARD
@@ -22,35 +22,6 @@ def state_evaluation(state):
             return -WINNING_REWARD
     else:
         return 0
-        # if false, do evaluation of the state, and return the state_score
-        # if the file is empty, use the initial parameter
-        if os.stat("RL/weights.csv").st_size == 0:
-                w = [10, 5, -5, 1, -1, 2, 3, -2, -3]
-        else:
-            with open("RL/weights.csv") as csv_file:
-                csv_reader = csv.reader(csv_file, delimiter=',')
-                row = next(csv_reader)
-                w = []
-                for num in row:
-                    w.append(float(num))
-
-        feature_array = np.array([])                                    # initial parameter
-        np.append(feature_array, board_count(state))                    # 10
-        np.append(feature_array, hostile_token_in_throw_range(state))   # 5
-        np.append(feature_array, token_in_enemy_throw_range(state))     # -5
-        np.append(feature_array, token_on_board(state))                 # 1
-        np.append(feature_array, enemy_token_on_board(state))           # -1
-        np.append(feature_array, 10/mean_distance_to_attack(state))     # 2
-        np.append(feature_array, min_distance_to_attack(state))         # 3
-        np.append(feature_array, 10/mean_distance_to_defense(state))    # -2  
-        np.append(feature_array, min_distance_to_defense(state))        # -3
-
-        
-        W = np.array([])
-        for i in range(0, len(feature_array)):
-            np.append(W, w[i])
-        
-        return feature_array.dot(W)
     
 
 def board_count(state):
