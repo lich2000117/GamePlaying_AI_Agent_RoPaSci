@@ -1,7 +1,5 @@
-import numpy as np
-from RL_base.state import State, isGameEnded
-from RL_base.util import get_symbol_by_location, closest_one, least_distance
-from math import tanh
+from Final.state import isGameEnded
+from Final.util import get_symbol_by_location, closest_one, least_distance
 import os
 import csv
 
@@ -9,7 +7,7 @@ def state_evaluation(state, ourPlayer, enemyPlayer):
 
     WINNING_REWARD = 9999
     DRAW_REWARD = -100
-
+    w = []
     # state is in the form of (play_dict, player's throw left, opponnet's throw left, player's side)
     # isGameEnded(state) returns (True, "Winner") or (True, "Loser") or (False, "Unknown")
     if isGameEnded(state, ourPlayer, enemyPlayer)[0]:

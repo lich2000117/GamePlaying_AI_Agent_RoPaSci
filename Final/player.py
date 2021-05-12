@@ -1,22 +1,9 @@
-from RL_base.util import Init_throw_range, add_action_to_play_dict, eliminate_and_update_board, calculate_normal_probability, get_symbol_by_location
-from RL_base.action import get_all_valid_action
-from RL_base.action_evaluation import action_evaluation
-from RL_base.state import State
-from RL_base.prediction import *
-from copy import copy
-from copy import deepcopy
-import random
-from RL_base.random_algorithms import refined_random_throw, random_throw, random_action, get_current_player_nodes_count
-import csv
-from RL_base.learning import temporal_difference_learning
-import os
-import numpy as np
+from Final.util import Init_throw_range, add_action_to_play_dict, eliminate_and_update_board
 
-import math
-import pandas as pd
-import matplotlib.pyplot as plt
+from Final.prediction import *
+from Final.learning import temporal_difference_learning
+import numpy as np
 import collections
-from collections import defaultdict as dd
 
 class Player:
     

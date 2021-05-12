@@ -5,12 +5,11 @@ import sys
 from threading import Thread
 from docx import Document
 import time
-from io import StringIO
 
 # config --------------------------------------------------------------------------------------
-PLAY_TIMES = 100   # Match Times
-UPPER_LIST = ['RL_train'] 
-LOWER_LIST = ['RL_base'] 
+PLAY_TIMES = 10   # Match Times
+UPPER_LIST = ['RL_base'] 
+LOWER_LIST = ['RL_base', 'IG', 'GreedyEnemy', 'IG2', 'RandomEnemy'] 
 SHOW_BUG_MATCH = True  # show match detail of a bugged match
 SHOW_TIMEOUT_MATCH = False  # show match detail of a timed out match
 # config --------------------------------------------------------------------------------------
@@ -33,9 +32,9 @@ def test_program(PLAY_TIMES, UPPER, LOWER, doc_out):
             #convert output to string
         output = ""
         try:
-            output = subprocess.check_output(['python3', '-m', 'referee', UPPER, LOWER]).decode(sys.stdout.encoding)
-        except:
             output = subprocess.check_output(['python', '-m', 'referee', UPPER, LOWER]).decode(sys.stdout.encoding)
+        except:
+            output = subprocess.check_output(['python3', '-m', 'referee', UPPER, LOWER]).decode(sys.stdout.encoding)
 
         # get only last line of output
         result = output.splitlines()[-1]
