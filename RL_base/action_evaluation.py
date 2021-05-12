@@ -53,6 +53,8 @@ def action_evaluation(playerClass, whichPlayer,state, action):
     else:
         ourPlayer = "opponent"
         opponent = "player"
+        AGGRESIVE_WEIGHT = playerClass.Enemy_Eval_Weight["aggresive"]
+        DEFENSIVE_WEIGHT = playerClass.Enemy_Eval_Weight["defensive"]
 
     target_dict = {'r':'s', 'p':'r', 's':'p'}
     # evaluation of action
