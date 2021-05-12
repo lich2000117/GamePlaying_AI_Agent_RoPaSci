@@ -31,7 +31,7 @@ class Player:
         self.USE_TOTAL_SCORE_PREDICTION = True
         self.GREEDY_PREDICT = False
         self.EXCLUDE_THROW_DIST = True
-        self.ANALYSIS_MODE = True
+        self.ANALYSIS_MODE = False
         self.AVOID_DRAW = True   # if algorithm break tie automatically
         self.REFINED_THROW = True   # if using advanced random throw strategy
         self.CONFIDENCE_LEVEL = 0.05   #confidence level to exclude outliers into distribution
