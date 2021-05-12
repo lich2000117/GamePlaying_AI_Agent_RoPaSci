@@ -10,7 +10,7 @@ from io import StringIO
 # config --------------------------------------------------------------------------------------
 PLAY_TIMES = 100   # Match Times
 UPPER_LIST = ['RL_train'] 
-LOWER_LIST = ['GreedyEnemy'] 
+LOWER_LIST = ['RL_base'] 
 SHOW_BUG_MATCH = True  # show match detail of a bugged match
 SHOW_TIMEOUT_MATCH = False  # show match detail of a timed out match
 # config --------------------------------------------------------------------------------------

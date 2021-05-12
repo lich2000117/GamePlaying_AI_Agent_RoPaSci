@@ -1,16 +1,16 @@
 from RL_train.state_evaluation import board_count, enemy_token_in_danger, token_in_danger
 from RL_train.state_evaluation import token_on_board, enemy_token_on_board
 from RL_train.state_evaluation import mean_distance_to_attack, min_distance_to_attack, mean_distance_to_defense, min_distance_to_defense
-from RL_train.state_evaluation import state_evaluation
+from RL_train.state_evaluation import state_evaluation, num_throw, support_distance
 from math import tanh, cosh, sinh
 
 def temporal_difference_learning(states_list, w, beta):
     function_list = [board_count, enemy_token_in_danger, token_in_danger,
                     token_on_board, enemy_token_on_board, mean_distance_to_attack, min_distance_to_attack,
-                    mean_distance_to_defense, min_distance_to_defense]
+                    mean_distance_to_defense, min_distance_to_defense, num_throw, support_distance]
     update_w = []
     # print("Enter TD lambda learning")
-    
+
     for i in range(0, len(w)):
         error_term = 0
         # w[i] is the parameter we want to learn

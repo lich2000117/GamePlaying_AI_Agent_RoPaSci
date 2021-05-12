@@ -21,7 +21,7 @@ class Player:
         as Lower).
         """
         self.IGNORE_ROUND = 5  # ignore first 5 rounds when doing probability predicting
-        self.beta = 0.2      
+        self.beta = 0.2    
         self.episilon = 0
 
         self.game_round = 1
@@ -77,7 +77,7 @@ class Player:
                 return random_action[1]
             else:
                 print("greedy action: ", action_evaluation_list[0])
-                # input("Pause")
+                input("Pause")
                 return action_evaluation_list[0][1]
             
            
@@ -116,10 +116,9 @@ class Player:
                     pre_w = []
                     for num in row:
                         pre_w.append(float(num))
-            # print("Previous weight: ", pre_w)
+            print("Previous weight: ", pre_w)
             update_w = temporal_difference_learning(self.states_list, pre_w, self.beta) 
-            # print("Weights after update: ", update_w) 
-            # input("___________")   
+            print("Weights after update: ", update_w) 
             # input("Press enter to continue!")                   
             with open('RL_train/weights.csv', 'w', newline='') as file:
                 writer = csv.writer(file)
@@ -139,12 +138,12 @@ def open_game_stragety(self):
         if self.side == "upper":
             return ("THROW", "p", (3, -2))
         if self.side == "lower":
-            return ("THROW", "p", (-3, 2))
+            return ("THROW", "p", (-3, -1))
     if self.game_round == 3: 
         if self.side == "upper":
             return ("THROW", "s", (4, -1))
         if self.side == "lower":
-            return ("THROW", "s", (-3, 1))
+            return ("THROW", "s", (-3, 4))
 
 
 

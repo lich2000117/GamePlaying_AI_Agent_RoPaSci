@@ -9,8 +9,8 @@ import csv
 
 def state_evaluation(state, txt = False):
 
-    WINNING_REWARD = 100
-    DRAW_REWARD = -10
+    WINNING_REWARD = 300
+    DRAW_REWARD = -100
     w = []
     # state is in the form of (play_dict, player's throw left, opponnet's throw left, player's side)
     # isGameEnded(state) returns (True, "Winner") or (True, "Loser") or (False, "Unknown")
@@ -26,7 +26,7 @@ def state_evaluation(state, txt = False):
         # if false, do evaluation of the state, and return the state_score
         # if the file is empty, use the initial parameter
         if os.stat("RL_train/weights.csv").st_size == 0:
-                w = [10, 5, -5, 1, -1, 2, 3, -2, -3]
+                w = [10, 5, -5, 1, -1, 2, 3, -2, -3, 5, -2]
         else:
             with open("RL_train/weights.csv") as csv_file:
                 csv_reader = csv.reader(csv_file, delimiter=',')
@@ -36,15 +36,17 @@ def state_evaluation(state, txt = False):
                     w.append(float(num))
 
         feature_array = []                                   # initial parameter
-        feature_array.append(board_count(state))                    # 10
-        feature_array.append(enemy_token_in_danger(state))          # 5
-        feature_array.append(token_in_danger(state))                # -5
-        feature_array.append(token_on_board(state))                 # 1
-        feature_array.append(enemy_token_on_board(state))           # -1
-        feature_array.append(mean_distance_to_attack(state))        # -2
-        feature_array.append(min_distance_to_attack(state))         # 3
-        feature_array.append(mean_distance_to_defense(state))       # 5  
-        feature_array.append(min_distance_to_defense(state))        # -3
+        feature_array.append(board_count(state))                    #1 10
+        feature_array.append(enemy_token_in_danger(state))          #2 5
+        feature_array.append(token_in_danger(state))                #3 -5
+        feature_array.append(token_on_board(state))                 #4 1
+        feature_array.append(enemy_token_on_board(state))           #5 -1
+        feature_array.append(mean_distance_to_attack(state))        #6 -2
+        feature_array.append(min_distance_to_attack(state))         #7 3
+        feature_array.append(mean_distance_to_defense(state))       #8 5  
+        feature_array.append(min_distance_to_defense(state))        #9 -3
+        feature_array.append(num_throw(state))                      #10 5
+        feature_array.append(support_distance(state))               #11 -2
 
         state_value = 0
         if txt == True:
@@ -53,6 +55,8 @@ def state_evaluation(state, txt = False):
         for i in range(0, len(w)):
             state_value += feature_array[i] * w[i]
         
+        if txt == True:
+            print(state_value)
         return state_value
     
 
@@ -225,6 +229,23 @@ def token_in_danger(state):
             if action[2] in state.play_dict["player"][target_type]:
                 count += 1
     return count
+
+
+def num_throw(state):
+    return state.throws_left
+
+
+def support_distance(state):
+    sum_distance = 0
+    target_dict = {"r":"s", "s":"p", "p":"r"}
+    for token_type in ['r', 'p', 's']:
+        for token_pos in state.play_dict["player"][token_type]:
+            sup_type = target_dict[token_type]
+            sup_list = state.play_dict["player"][sup_type]
+            if sup_list:
+                sup_pos = closest_one(token_pos, sup_list)
+                sum_distance += least_distance(sup_pos, token_pos)
+    return sum_distance
 
 
 
