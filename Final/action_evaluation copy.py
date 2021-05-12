@@ -97,12 +97,14 @@ def action_evaluation(playerClass, whichPlayer,state, action):
                     enemy_token_chased_list.append(enemy_token_pos)
                     if enemy_token_pos[0] not in throw_range:
                         count += 1
+                        
+
                     # break to avoid multiple count
                     break
 
         # next check out whether this throw action is either
         # 1. throw on hostile token    2. throw on friendly token   3.throw on empty grid
-        target_type = target_dict[action[1]]  
+        target_type = target_dict[action[1]]
         counter_type = target_dict[target_dict[action[1]]]
         # throw action1: throw on hostile token
         if action[2] in enemy_token_list:
@@ -110,25 +112,6 @@ def action_evaluation(playerClass, whichPlayer,state, action):
             if action[2] in state.play_dict[opponent][target_type]:
                 # if hostile token is already in danger, no need to use throw
                 if action[2] not in enemy_token_chased_list:
-                    friend_symbol = get_symbol_by_location(ourPlayer, state.play_dict, action[2])
-                    # if the throwing location doesn't have out own token
-                    if not friend_symbol:
-                        # if the throwing location is at predicted location (predict enemy move)
-                        if action[2] in playerClass.predicted_enemy_action[2]:
-                            # check if we have a friendly near by been chasing
-                            for friend_token in player_token_list:
-                                friend_symbol = get_symbol_by_location(ourPlayer, state.play_dict, friend_token)
-                                if friend_symbol == counter_type:
-                                    # we take intersection of been chased firendly and enemy nodes
-                                    friend_area = set(get_six_adj_nodes(friend_token))
-                                    enemy_area = set(get_six_adj_nodes(action[2]))
-                                    contact_area = friend_area.intersection(enemy_area)
-                                    # if we are sure that next move is on intersection and the distance is 2 not 1 (since enemy eliminate friend when dist = 1)
-                                    if len(contact_area) == 1:
-                                        if action[2] in contact_area:
-                                            aggresive_score += THROW_ELIMINATION_REWARD
-                                            reward_list.append("Throw elimination with certainty +" + str(THROW_ELIMINATION_REWARD))
-                                            
                     aggresive_score += THROW_ELIMINATION_REWARD * (1 - 1/count)
                     reward_list.append("Throw elimination with high possibility +" + str(THROW_ELIMINATION_REWARD * (1 - 1/count)))
             # punish being eliminated
@@ -341,7 +324,6 @@ def action_evaluation(playerClass, whichPlayer,state, action):
 
 
 def state_analysis(state, contact_area_dict, whichPlayer, opponent):
-    """get adjacent area of a been chased token"""
     target_dict = {"r":"s", "s":"p", "p":"r"}
     for token_type in ['r', 'p', 's']:
         counter_type = target_dict[target_dict[token_type]]

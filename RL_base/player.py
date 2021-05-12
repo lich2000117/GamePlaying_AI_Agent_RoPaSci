@@ -194,7 +194,7 @@ class Player:
                 print(self.predicted_enemy_action)
                 print("````````````````````````````````actual _action````````````````````````````````")
                 print(opponent_action)
-        #input("")
+        input("")
     
     def _snap(self):
         """

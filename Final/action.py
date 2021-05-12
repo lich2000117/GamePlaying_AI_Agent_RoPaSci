@@ -13,7 +13,6 @@ def get_all_valid_action(player, state):
     move_list = get_all_valid_move(player, state)
     all_valid_action += move_list
 
-
     # get all the throw action
     
     if state.throws_left > 0:
@@ -30,9 +29,9 @@ def get_all_valid_action(player, state):
 def get_all_valid_throw(state):
     """This function is used to generate all the possible throw"""
     have_thrown = 9 - state.throws_left
-    # print("Now I have ", state.throws_left, "times of throw")
+    #print("Now I have ", state.throws_left, "times of throw")
     # print("I have thrown ", have_thrown, "times")
-    # print(state.side)
+    #print(state.side)
     throw_list = []
     if state.side == "upper":
         for row in range(4, 3 - have_thrown, -1):
@@ -47,7 +46,7 @@ def get_all_valid_throw(state):
                     throw_list.append((row, col))
         return throw_list
     else:
-        # print("Cannont throw")
+        print("Cannont throw")
         return []
 
 

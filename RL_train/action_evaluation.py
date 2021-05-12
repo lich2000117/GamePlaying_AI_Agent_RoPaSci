@@ -298,7 +298,7 @@ def action_evaluation(state, action):
     reward_list.append("defense_score: " + str(defense_score) )
     reward_list.append("punishment_score: " + str(punishment_score) )
     reward_list.append("state score diff: " + str(state_score_diff) )
-    return (total_score, reward_list)
+    return (state_score, reward_list)
 
 
 

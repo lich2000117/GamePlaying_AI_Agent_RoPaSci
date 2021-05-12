@@ -7,9 +7,9 @@ from docx import Document
 import time
 
 # config --------------------------------------------------------------------------------------
-PLAY_TIMES = 10   # Match Times
-UPPER_LIST = ['RL_base'] 
-LOWER_LIST = ['RL_base', 'IG', 'GreedyEnemy', 'IG2', 'RandomEnemy'] 
+PLAY_TIMES = 2   # Match Times
+UPPER_LIST = ['Final'] 
+LOWER_LIST = ['Final', 'IG', 'GreedyEnemy', 'IG2', 'RandomEnemy'] 
 SHOW_BUG_MATCH = True  # show match detail of a bugged match
 SHOW_TIMEOUT_MATCH = False  # show match detail of a timed out match
 # config --------------------------------------------------------------------------------------
