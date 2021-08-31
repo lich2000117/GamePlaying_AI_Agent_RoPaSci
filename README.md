@@ -28,7 +28,7 @@ Reinforcement learning, reward mechanism, prediction system, temporal difference
 
 
 ## Report: 
-<!-- 
+
 In partA, the game basically ends when all upper nodes eliminate its target symbols in all lower nodes. To do so, for each symbol of upper’s, we need to implement a search algorithm to find a possible route for them that leads each from starting position to position of the lower’s token it aims to eliminate, while at the same time bypassing blocks.
 So, in this project we implement a search algorithm that is a mix of BFS and greedy search algorithm, the program could find each node’s counter symbol and manage to eliminate them.
  
@@ -92,6 +92,4 @@ However, no matter where the nodes are placed, the worst time and space complexi
 Number of nodes:
 As the algorithm tears apart of the synchronising playing (move all nodes at the same time) to linear solving(move one node at a time),  for each movement a node make, it has to do a BFS process, so for a single node, it takes d steps to get to the target, it takes d times searches. Therefore, to find a solution, in the worst case for N nodes waiting to be eliminated, it has to do O(d*N*M) (number of lower nodes for elimination) calculations. 
  
- 
 
- -->
