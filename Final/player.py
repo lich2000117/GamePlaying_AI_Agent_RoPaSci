@@ -16,12 +16,13 @@ class Player:
         play as Upper), or the string "lower" (if the instance will play
         as Lower).
         """
+        self.ANALYSIS_MODE = True         # Use False if need non-detail version
+
         self.ITERATION = 50
         self.STEP_LOOK_AHEAD = 0
         self.TEMPORAL_DIFF_LEARNING = False
         self.GREEDY_PREDICT = True
         self.EXCLUDE_THROW_DIST = True
-        self.ANALYSIS_MODE = True
         self.AVOID_DRAW = True   # if algorithm break tie automatically
         self.REFINED_THROW = True   # if using advanced random throw strategy
         self.CONFIDENCE_LEVEL = 0.05   #confidence level to exclude outliers into distribution
@@ -125,11 +126,12 @@ class Player:
                 player_best_action = draw_avoid_best_action(self,player_total_score_list, cur_snap)
             else:
                 player_best_action = player_total_score_list[0][1]
-            print("\nPLayer's best action")
-            print(player_total_score_list[0])
-            print("\nEnemy's best action")
-            if self.opponent_action_score_list:
-                print(self.opponent_action_score_list[0])
+            if self.ANALYSIS_MODE:
+                print("\nPLayer's best action")
+                print(player_total_score_list[0])
+                print("\nEnemy's best action")
+                if self.opponent_action_score_list:
+                    print(self.opponent_action_score_list[0])
             print("\n==================================================================\n")
             
         return player_best_action
