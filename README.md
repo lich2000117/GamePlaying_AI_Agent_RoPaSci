@@ -1,14 +1,34 @@
 # RoPaSci360 GamePlaying Agent
 
+# Artificial Intelligence COMP30024
+## Project Report
+## Group Member: ******* Jiaqi Wu, ******* Chenghao Li
+
 
 <p align="center">
   <img src="game.jpg"  width="1500" >
 </p>
+<p align="center">
+  <img src="game2.jpg"  width="1500" >
+</p>
+
+### How to Run:
+To have "Final" VS "GreedyEnemy" match, run following code:
+```ruby
+python -m referee Final GreedyEnemy
+```
+
+Team Lists(each implemented different methods):
+- DumbEnemy
+- Enemy
+- Final
+- GreedyEnemy
+- IG
+- IG2
+- RandomEnemy
+- RL
 
 
-# Artificial Intelligence COMP30024
-## Project Report
-## Group Member: ******* Jiaqi Wu, ******* Chenghao Li
 ### Overview:
 IG is the name of the agent we created to play the board game ”RoPaSci360”. The 
 structure which IG used was inspired by reinforcement learning where an agent learns by 
