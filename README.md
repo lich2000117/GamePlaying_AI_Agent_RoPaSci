@@ -1,6 +1,11 @@
 # RoPaSci360 GamePlaying Agent
 
 
+<p align="center">
+  <img src="game.jpg"  width="1500" >
+</p>
+
+
 # Artificial Intelligence COMP30024
 ## Project Report
 ## Group Member: ******* Jiaqi Wu, ******* Chenghao Li
