@@ -16,11 +16,11 @@ class Player:
         play as Upper), or the string "lower" (if the instance will play
         as Lower).
         """
-        self.ANALYSIS_MODE = True         # Use False if need non-detail version
+        self.ANALYSIS_MODE = False         # Use False if need non-detail version
 
-        self.ITERATION = 50
+        self.ITERATION = 20
         self.STEP_LOOK_AHEAD = 0
-        self.TEMPORAL_DIFF_LEARNING = False
+        self.TEMPORAL_DIFF_LEARNING = True
         self.GREEDY_PREDICT = True
         self.EXCLUDE_THROW_DIST = True
         self.AVOID_DRAW = True   # if algorithm break tie automatically
@@ -36,7 +36,7 @@ class Player:
         }
         
         self.Enemy_Eval_Weight = {
-            "aggresive":1,
+            "aggresive":1.2,
             "defensive":1,
             "prefer_throw":1,    # the enemy's preference of throw elimination or slide elimination
             "other":1

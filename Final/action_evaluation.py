@@ -34,7 +34,7 @@ def action_evaluation(playerClass, whichPlayer,state, action):
     APPROACHING_REWARD = 4
 
     ################ avoid danger action reward parameter ###################
-    AVOID_DANGER_REWARD = 3
+    AVOID_DANGER_REWARD = 1
     INTERCEPT_REWARD = 12
 
     ################ throw-elimination action reward parameter ###################

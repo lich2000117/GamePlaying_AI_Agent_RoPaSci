@@ -64,7 +64,7 @@ def greedy_action(player_class):
     # if have throws left, first do greedy search and move and eat
     action = BFS_Action(player_class, player_class.play_dict, player_class.target_dict)
     if action:
-        print("\n^^^^^^^^^^^^^^ BFS MOVING ... ^^^^^^^^^^^^^^^\n")
+        #print("\n^^^^^^^^^^^^^^ BFS MOVING ... ^^^^^^^^^^^^^^^\n")
         return action
 
     ###  GREEDY THROW       
@@ -72,7 +72,7 @@ def greedy_action(player_class):
     if (player_class.throws_left > 0):
         action = greedy_throw(player_class)
         if action:
-            print("\n^^^^^^^^^^^^^^ GREEDY THROW ^^^^^^^^^^^^^^^\n")
+            #print("\n^^^^^^^^^^^^^^ GREEDY THROW ^^^^^^^^^^^^^^^\n")
             return action
 
     # RANDOM MOVE
@@ -83,14 +83,14 @@ def greedy_action(player_class):
 
             # break tie by random throw
             if (player_class.throws_left>0):
-                print("\n^^^^^^^^^^^^^^BREAKING TIE, THROW^^^^^^^^^^^^^^^\n")
+                #print("\n^^^^^^^^^^^^^^BREAKING TIE, THROW^^^^^^^^^^^^^^^\n")
                 if (player_class.REFINED_THROW):
                     return refined_random_throw(player_class, player_class.REFINED_THROW)
                 else:
                     return random_throw(player_class)
-        print("\n^^^^^^^^^^^^^^RANDOM SWING/SLIDE^^^^^^^^^^^^^^^\n")
+        #print("\n^^^^^^^^^^^^^^RANDOM SWING/SLIDE^^^^^^^^^^^^^^^\n")
         return do_random_slide_swing(player_class)
-    print("\n^^^^^^^^^^^^^^RANDOM THROW^^^^^^^^^^^^^^^\n") 
+    #print("\n^^^^^^^^^^^^^^RANDOM THROW^^^^^^^^^^^^^^^\n") 
 
     if (player_class.REFINED_THROW):
         return refined_random_throw(player_class, player_class.REFINED_THROW)

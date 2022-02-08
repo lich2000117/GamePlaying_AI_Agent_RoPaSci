@@ -66,8 +66,12 @@ def isGameEnded(state, ourPlayer, opponent):
             # draw
             return (True, "Draw")
         else:
-            # i am winning
-            return (True, "Winner")
+            # if we have invincible token
+            if enemy_num_tokens <= 1:
+                # Game rule: if enemy number of tokens = 1, we win
+                return (True, "Winner")
+            else:
+                return (False, "Unknown")
     elif isInvincible_enemy:
         # lose
         return (True, "Loser") 
