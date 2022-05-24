@@ -3,16 +3,16 @@
 #### Table of Contents  
 1. [Introduction](#Introduction)  
 2. [Illustration of the Game](#Illustration-of-the-Game)
-2.1 [How to Run](#How-to-Run)
+2. [How to Run](#How-to-Run)
 3. [Algorithm Overview](#Algorithm-Overview)  
 4. [Game Analysis](#Game-Analysis)  
 5. [Algorithm](#Algorithm) 
-8.1  [Reasoning](#Reasoning)
-9.2  [Heuristics](#Heuristics)
-10.3  [Efficiency](#Efficiency) Completeness Optimality 
-11.4  [Completeness](#Completeness)
-12.5  [Optimality](#Optimality)
-13. [Complexity Analysis](#Complexity-Analysis)  
+8.  [Reasoning](#Reasoning)
+9.  [Heuristics](#Heuristics)
+10.  [Efficiency](#Efficiency)
+13.  [Completeness](#Completeness)
+14.  [Optimality](#Optimality)
+15. [Complexity Analysis](#Complexity-Analysis)  
  
 
 ## Introduction
